@@ -11,7 +11,7 @@ app.get('/', (req, res) => {
   console.info('psp received a request.');
 
   const target = process.env.TARGET || 'World';
-  res.send(`Hello ${target}!`);
+  res.send(`Hi ${target}!`);
 });
 
 const port = process.env.PORT || 8080;
