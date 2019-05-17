@@ -3,7 +3,7 @@ const fs = require('fs');
 const app = express();
 try{
     app.secrets = JSON.parse(fs.readFileSync('secrets.json'));  
-    console.info(`secrets:${Object.keys(app,secrets).join(', ')}`)
+    console.info(`secrets:${Object.keys(app.secrets).join(', ')}`)
 } catch (err) {
     console.error('Unable to read secrets file.', err)
 }
