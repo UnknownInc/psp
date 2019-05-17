@@ -7,11 +7,16 @@ try{
 } catch (err) {
     console.error('Unable to read secrets file.', err)
 }
+
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
+
 app.get('/', (req, res) => {
   console.info('psp received a request.');
 
   const target = process.env.TARGET || 'World';
-  res.send(`Hi ${target}!`);
+  res.send(`Hello ${target}!`);
 });
 
 const port = process.env.PORT || 8080;
