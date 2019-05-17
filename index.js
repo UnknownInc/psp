@@ -1,16 +1,20 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
-
-app.secrets = JSON.parse(fs.readFileSync('secrets.json'));  
+try{
+    app.secrets = JSON.parse(fs.readFileSync('secrets.json'));  
+    console.info(`secrets:${Object.keys(app,secrets).join(', ')}`)
+} catch (err) {
+    console.error('Unable to read secrets file.', err)
+}
 app.get('/', (req, res) => {
-  console.log('psp received a request.');
+  console.info('psp received a request.');
 
   const target = process.env.TARGET || 'World';
-  res.send(`Hello ${target}!\nDB:${app.secrets.DB}`);
+  res.send(`Hello ${target}!`);
 });
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-  console.log('psp listening on port', port);
+  console.info('psp listening on port', port);
 });
