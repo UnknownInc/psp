@@ -26,8 +26,10 @@ steps:
   args: ['push', 'gcr.io/$PROJECT_ID/psp']
   # Deploy container image to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', 'psp-cluster-1', '--cluster-location', 'us-central1-a']
+  args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', '${_CLUSTER_NAME}', '--cluster-location', '${_CLUSTER_LOCATION}']
 substitutions:
+    _CLUSTER_NAME: 'upsps-cluster-1'
+    _CLUSTER_LOCATION: 'us-central1-a'
     _SUB_VALUE: unused
 options:
     substitution_option: 'ALLOW_LOOSE'
