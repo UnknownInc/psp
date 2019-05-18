@@ -16,5 +16,8 @@ RUN npm install --only=production
 # Copy local code to the container image.
 COPY . .
 
+RUN date > BUILD_DATE
+RUN echo ${BUILD} > BUILD_ID
+RUN echo ${COMMIT} > COMMIT_ID
 # Run the web service on container startup.
 CMD [ "npm", "start" ]
