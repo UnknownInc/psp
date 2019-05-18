@@ -1,3 +1,5 @@
+ARG BUILDID
+ARG COMMITID
 # Use the official Node.js 12 image.
 # https://hub.docker.com/_/node
 FROM node:12
@@ -17,7 +19,7 @@ RUN npm install --only=production
 COPY . .
 
 RUN date > BUILD_DATE
-RUN echo ${BUILD} > BUILD_ID
-RUN echo ${COMMIT} > COMMIT_ID
+RUN echo ${BUILDID} > BUILD_ID
+RUN echo ${COMMITID} > COMMIT_ID
 # Run the web service on container startup.
 CMD [ "npm", "start" ]

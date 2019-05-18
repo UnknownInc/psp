@@ -10,7 +10,14 @@ steps:
   - --key=uisecrets
   # build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/psp', '.']
+  args: ['build', 
+  '--build-arg',
+  'BUILDID=${BUILD_ID}',
+  '--build-arg',
+  'COMMITID=${SHORT_SHA}',
+  '-t', 
+  'gcr.io/$PROJECT_ID/psp', 
+  '.']
   env:
   - 'BUILD=$BUILD_ID'
   - 'COMMIT=$SHORT_SHA'
