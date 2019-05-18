@@ -37,5 +37,5 @@ app.get('/', (req, res) => {
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.info('psp listening on port', port);
-  console.info('buildinfo: ', BUILDINFO)
+  console.info(`Builddate: ${BUILDINFO.date} , ref: https://console.cloud.google.com/cloud-build/builds/${BUILDINFO.id}?project=ind-si-infra-managment-184960`)
 });
