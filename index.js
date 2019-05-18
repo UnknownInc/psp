@@ -23,7 +23,7 @@ app.get('/ping', (req, res) => {
 
 app.get('/_status',(req, res) => {
   res.json({
-      BUILDINFO: BUILDINFO
+      buildinfo: BUILDINFO
   })
 })
 
