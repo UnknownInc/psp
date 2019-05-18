@@ -10,9 +10,9 @@ try{
 
 const BUILDINFO={}
 try{
-    BUILDINFO.date = fs.readFileSync('BUILD_DATE',"utf-8");
-    BUILDINFO.id = fs.readFileSync('BUILD_ID',"utf-8");
-    BUILDINFO.commit = String(fs.readFileSync('COMMIT_ID'));
+    BUILDINFO.date = fs.readFileSync('BUILD_DATE',"utf-8").trim();
+    BUILDINFO.id = fs.readFileSync('BUILD_ID',"utf-8").trim();
+    BUILDINFO.commit = fs.readFileSync('COMMIT_ID',"utf-8").trim();
 } catch (err) {
     console.error('Unable to read build info file.', err)
 }
