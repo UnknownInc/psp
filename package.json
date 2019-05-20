@@ -1,14 +1,41 @@
 {
-  "name": "knative-serving-helloworld",
+  "name": "psp",
   "version": "1.0.0",
-  "description": "Simple hello world sample in Node",
+  "description": "psp application",
   "main": "index.js",
+  "engines": {
+    "node": ">=12.2.0"
+  },
   "scripts": {
-    "start": "node index.js"
+    "start": "node lib/index.js",
+    "build": "./node_modules/.bin/babel src --out-dir lib",
+    "babel-node": "babel-node",
+    "dev": "cross-env NODE_PATH=. NODE_ENV=development nodemon --exec npm run babel-node -- ./src/index.js"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.16.4"
+    "@babel/polyfill": "^7.4.4",
+    "@babel/runtime": "^7.4.4",
+    "awilix": "^4.2.2",
+    "awilix-express": "^2.1.1",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "log4js": "^4.2.0",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-transform-regenerator": "^7.4.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "cross-env": "^5.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-google": "^0.13.0",
+    "nodemon": "^1.19.0"
   }
 }
