@@ -1,26 +1,45 @@
 ARG BUILDID
 ARG COMMITID
-# Use the official Node.js 12 image.
-# https://hub.docker.com/_/node
-FROM node:12
-ARG BUILDID='000'
-ARG COMMITID='XXX'
-# Create and change to the app directory.
-WORKDIR /usr/src/app
+
+FROM node:12.2.0-alpine AS build
+RUN apk add --update --no-cache \
+    python \
+    make \
+    g++
 
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure both package.json AND package-lock.json are copied.
 # Copying this separately prevents re-running npm install on every code change.
-COPY package.json package*.json ./
+COPY package.json /psp/package*.json 
 
-# Install production dependencies.
-RUN npm install --only=production
+WORKDIR /psp
+RUN npm install
 
-# Copy local code to the container image.
-COPY . .
+COPY . /psp
+
+RUN npm run build
+
+ARG BUILDID='000'
+ARG COMMITID='XXX'
 
 RUN date > BUILD_DATE
 RUN echo ${BUILDID} > BUILD_ID
 RUN echo ${COMMITID} > COMMIT_ID
+
+RUN rm -rf node_modules
+
+# Use the official Node.js 12 image.
+# https://hub.docker.com/_/node
+FROM node:12.2.0-alpine
+RUN apk add --update --no-cache curl
+
+# Create and change to the app directory.
+WORKDIR /usr/src/app
+
+COPY --from=build /psp .
+
+# Install production dependencies.
+RUN npm install --only=production
+
 # Run the web service on container startup.
 CMD [ "npm", "start" ]
