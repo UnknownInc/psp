@@ -4,3 +4,7 @@ gcloud kms encrypt \
   --location=global \
   --keyring=pspkeyring \
   --key=uisecrets
+
+gcloud kms encrypt --plaintext-file=id_rsa \
+ --ciphertext-file=id_rsa.enc \
+ --location=global --keyring=pspkeyring --key=github-key

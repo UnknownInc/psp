@@ -16,21 +16,127 @@ steps:
   '--build-arg',
   'COMMITID=${SHORT_SHA}',
   '-t', 
-  'gcr.io/$PROJECT_ID/psp', 
+  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest',
+  '-t', 
+  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
   '.']
   env:
   - 'BUILD=$BUILD_ID'
   - 'COMMIT=$SHORT_SHA'
-  # push the container image to Container Registry
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/psp']
-  # Deploy container image to Cloud Run
+# Decrypt the file containing the key
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', '${_CLUSTER_NAME}', '--cluster-location', '${_CLUSTER_LOCATION}']
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=id_rsa.enc
+  - --plaintext-file=/root/.ssh/id_rsa
+  - --location=global
+  - --keyring=pspkeyring
+  - --key=github-key
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+# Set up git with key and domain.
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    chmod 600 /root/.ssh/id_rsa
+    cat <<EOF >/root/.ssh/config
+    Hostname github.com
+    IdentityFile /root/.ssh/id_rsa
+    EOF
+    mv known_hosts /root/.ssh/known_hosts
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+# This step clones the psp-env repository
+- name: 'gcr.io/cloud-builders/git'
+  args:
+  - clone
+  - git@github.com:UknownInc/psp-env
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: bash
+  args:
+  - '-c'
+  - |
+    cd psp-env && \
+    git checkout $BRANCH_NAME && \
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+
+# This step generates the new values
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Generate manifest
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+     sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
+     sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
+     sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > psp-env/values.yaml
+# This step pushes the manifest back to psp-env
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: Push manifest
+  entrypoint: /bin/sh
+  args:
+  - '-c'
+  - |
+    set -x && \
+    cd psp-env && \
+    git add values.yaml && \
+    git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
+    Built from commit ${COMMIT_SHA} of repository psp
+    Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
+    git push origin $BRANCH_NAME
+# - name: gcr.io/cloud-builders/git
+#   args: ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/myrepo', 'master']
+# push the container image to Container Registry
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: ['push', 'gcr.io/$PROJECT_ID/psp']
+# Deploy container image to Cloud Run
+# - name: 'gcr.io/cloud-builders/gcloud'
+#   args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', '${_CLUSTER_NAME}', '--cluster-location', '${_CLUSTER_LOCATION}']
 substitutions:
-    _CLUSTER_NAME: 'upsps-cluster-1'
-    _CLUSTER_LOCATION: 'us-central1-a'
+  _CLUSTER_NAME: 'psp-cluster-1'
+  _CLUSTER_LOCATION: 'us-central1-a'
 options:
-    substitution_option: 'ALLOW_LOOSE'
+  substitution_option: 'ALLOW_LOOSE'
 images:
-- gcr.io/$PROJECT_ID/psp
+- gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest
+- gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA
+
+#reference https://cloud.google.com/cloud-build/docs/build-config
+# steps:
+# - name: string
+#   args: [string, string, ...]
+#   env: [string, string, ...]
+#   dir: string
+#   id: string
+#   waitFor: string
+#   entrypoint: string
+#   secretEnv: string
+#   volumes: object(Volume)
+#   timeout: string (Duration format)
+# - name: string
+#   ...
+# - name: string
+#   ...
+# timeout: string (Duration format)
+# logsBucket: string
+# options:
+#  sourceProvenanceHash: enum(HashType)
+#  machineType: enum(MachineType)
+#  diskSizeGb: string (int64 format)
+#  substitutionOption: enum(SubstitutionOption)
+#  logStreamingOption: enum(LogStreamingOption)
+#  logging: enum(LoggingMode)
+# substitutions: map (key: string, value: string)
+# tags: [string, string, ...]
+# secrets: object(Secret)
+# images:
+# - [string, string, ...]
+# artifacts: object (Artifacts)
