@@ -13,3 +13,8 @@ gcloud kms encrypt \
 #   --location=global \
 #   --keyring=pspkeyring \
 #   --purpose=encryption
+
+gcloud kms keys add-iam-policy-binding \
+    githubkey --location=global --keyring=pspkeyring \
+    --member=serviceAccount:[SERVICE-ACCOUNT]@cloudbuild.gserviceaccount.com \
+    --role=roles/cloudkms.cryptoKeyDecrypter

@@ -55,7 +55,7 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args:
   - clone
-  - git@github.com:UknownInc/psp-env
+  - git@github.com:UnknownInc/psp-env.git
   volumes:
   - name: 'ssh'
     path: /root/.ssh
