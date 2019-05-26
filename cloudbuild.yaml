@@ -92,6 +92,9 @@ steps:
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
     git push origin $BRANCH_NAME
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
 # - name: gcr.io/cloud-builders/git
 #   args: ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/myrepo', 'master']
 # push the container image to Container Registry
