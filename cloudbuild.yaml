@@ -32,7 +32,7 @@ steps:
   - --plaintext-file=/root/.ssh/id_rsa
   - --location=global
   - --keyring=pspkeyring
-  - --key=github-key
+  - --key=githubkey
   volumes:
   - name: 'ssh'
     path: /root/.ssh
