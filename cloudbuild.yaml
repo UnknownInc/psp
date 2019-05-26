@@ -75,7 +75,7 @@ steps:
   args:
   - '-c'
   - |
-     sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
+     cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
      sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
      sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > psp-env/values.yaml
 # This step pushes the manifest back to psp-env
