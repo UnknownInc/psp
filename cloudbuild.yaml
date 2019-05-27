@@ -56,9 +56,6 @@ steps:
   '-t', 
   'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
   '.']
-  env:
-  - 'BUILD=$BUILD_ID'
-  - 'COMMIT=$SHORT_SHA'
 # This step clones the psp-env repository
 - name: 'gcr.io/cloud-builders/git'
   args:
