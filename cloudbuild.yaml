@@ -57,7 +57,7 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-# This step clones the psp-env repository
+# This step commit new version and clones the psp-env repository
 - name: 'gcr.io/cloud-builders/git'
   args:
   - clone
@@ -70,13 +70,11 @@ steps:
   args:
   - '-c'
   - |
-    if test '${BRANCH_NAME}' = 'master'; then
-      echo 'master' > PSPENV_BRANCH
-    else
-      echo '${BRANCH_NAME}' > PSPENV_BRANCH
-    fi
+    git add VERSION
+    git commit -m 'Updated version to $(echo VERSION) . [skip ci]'
+    git push origin $BRANCH_NAME
     cd psp-env && \
-    git checkout $(cat ../PSPENV_BRANCH) && \
+    git checkout $BRANCH_NAME && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
@@ -115,7 +113,7 @@ steps:
     git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-    git push origin $(cat ../PSPENV_BRANCH)
+    git push origin $BRANCH_NAME
   volumes:
   - name: 'ssh'
     path: /root/.ssh
