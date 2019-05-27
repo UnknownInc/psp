@@ -77,6 +77,7 @@ steps:
   args:
   - '-c'
   - |
+    export $$GOPATH=/root/go
     export PATH=$$PATH:$$GOPATH/bin
     echo $$PATH
     go get -u gopkg.in/mikefarah/yq.v2
