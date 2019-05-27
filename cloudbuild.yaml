@@ -1,4 +1,10 @@
 steps:
+- name: gcr.io/cloud-builders/gcloud 
+  entrypoint: bash
+  args:
+  - '-c'
+  - |
+    perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION
 - name: gcr.io/cloud-builders/gcloud
   args:
   - kms
