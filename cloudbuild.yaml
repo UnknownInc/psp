@@ -1,5 +1,5 @@
 steps:
-# Decrypt the file containing the key
+# Decrypt the file containing the github ssh key
 - name: 'gcr.io/cloud-builders/gcloud'
   args:
   - kms
@@ -24,16 +24,17 @@ steps:
     IdentityFile /root/.ssh/id_rsa
     EOF
     mv known_hosts /root/.ssh/known_hosts
-    git checkout $BRANCH_NAME
   volumes:
   - name: 'ssh'
     path: /root/.ssh
+#update the version number
 - name: gcr.io/cloud-builders/gcloud 
   entrypoint: bash
   args:
   - '-c'
   - |
     echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION) > VERSION
+# decrypt the secrets file
 - name: gcr.io/cloud-builders/gcloud
   args:
   - kms
@@ -43,7 +44,7 @@ steps:
   - --location=global
   - --keyring=pspkeyring
   - --key=uisecrets
-  # build the container image
+# build the container image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', 
   '--build-arg',
@@ -58,7 +59,7 @@ steps:
   env:
   - 'BUILD=$BUILD_ID'
   - 'COMMIT=$SHORT_SHA'
-# This step commit new version and clones the psp-env repository
+# This step clones the psp-env repository
 - name: 'gcr.io/cloud-builders/git'
   args:
   - clone
@@ -71,10 +72,6 @@ steps:
   args:
   - '-c'
   - |
-    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-    git add VERSION
-    git commit -m 'Updated version to $(echo VERSION) . [skip ci]'
-    git push $BRANCH_NAME
     cd psp-env && \
     git checkout $BRANCH_NAME && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') 
@@ -119,14 +116,6 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-# - name: gcr.io/cloud-builders/git
-#   args: ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/myrepo', 'master']
-# push the container image to Container Registry
-# - name: 'gcr.io/cloud-builders/docker'
-#   args: ['push', 'gcr.io/$PROJECT_ID/psp']
-# Deploy container image to Cloud Run
-# - name: 'gcr.io/cloud-builders/gcloud'
-#   args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', '${_CLUSTER_NAME}', '--cluster-location', '${_CLUSTER_LOCATION}']
 substitutions:
   _CLUSTER_NAME: 'psp-cluster-1'
   _CLUSTER_LOCATION: 'us-central1-a'
