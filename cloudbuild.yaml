@@ -77,8 +77,8 @@ steps:
   args:
   - '-c'
   - |
-    export PATH=$PATH:$GOPATH/bin
-    echo $PATH
+    export PATH=$$PATH:$$GOPATH/bin
+    echo $$PATH
     go get -u gopkg.in/mikefarah/yq.v2
     cd psp-env && \
     yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
