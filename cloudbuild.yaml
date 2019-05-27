@@ -64,15 +64,14 @@ steps:
   args:
   - '-c'
   - |
-    if test "${BRANCH_NAME}" = 'master' then \
-      echo "master" > PSPENV_BRANCH \
+    if test '${BRANCH_NAME}' = 'master'; then \
+      echo 'master' > PSPENV_BRANCH \
     else \
-      echo "${BRANCH_NAME}" > PSPENV_BRANCH \
+      echo '${BRANCH_NAME}' > PSPENV_BRANCH \
     fi \
     cd psp-env && \
     git checkout $(cat ..\PSPENV_BRANCH) && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-
 # This step generates the new values
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Generate manifest
