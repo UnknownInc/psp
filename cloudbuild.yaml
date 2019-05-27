@@ -64,8 +64,13 @@ steps:
   args:
   - '-c'
   - |
+    if test "${BRANCH_NAME}" = 'master' then \
+      echo "master" > PSPENV_BRANCH
+    else
+      echo "${BRANCH_NAME}" > PSPENV_BRANCH
+    if \
     cd psp-env && \
-    git checkout $BRANCH_NAME && \
+    git checkout $(cat ..\PSPENV_BRANCH) && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
 
 # This step generates the new values
@@ -75,9 +80,9 @@ steps:
   args:
   - '-c'
   - |
-     cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
-     sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
-     sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > values.yaml
+    cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
+    sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
+    sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > values.yaml
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
@@ -91,7 +96,7 @@ steps:
     git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-    git push origin $BRANCH_NAME
+    git push origin $(cat ../PSPENV_BRANCH)
   volumes:
   - name: 'ssh'
     path: /root/.ssh
