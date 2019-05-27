@@ -73,9 +73,9 @@ steps:
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
     git add VERSION
     git commit -m 'Updated version to $(echo VERSION) . [skip ci]'
-    git push
+    git push $BRANCH_NAME
     cd psp-env && \
-    git checkout $BRANCH_NAME && \
+    git checkout $BRANCH_NAME 
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
