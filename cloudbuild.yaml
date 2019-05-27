@@ -1,4 +1,33 @@
 steps:
+# Decrypt the file containing the key
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=id_rsa.enc
+  - --plaintext-file=/root/.ssh/id_rsa
+  - --location=global
+  - --keyring=pspkeyring
+  - --key=githubkey
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+# Set up git with key and domain.
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    chmod 600 /root/.ssh/id_rsa
+    cat <<EOF >/root/.ssh/config
+    Hostname github.com
+    IdentityFile /root/.ssh/id_rsa
+    EOF
+    mv known_hosts /root/.ssh/known_hosts
+    git checkout $BRANCH_NAME
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
 - name: gcr.io/cloud-builders/gcloud 
   entrypoint: bash
   args:
@@ -29,34 +58,6 @@ steps:
   env:
   - 'BUILD=$BUILD_ID'
   - 'COMMIT=$SHORT_SHA'
-# Decrypt the file containing the key
-- name: 'gcr.io/cloud-builders/gcloud'
-  args:
-  - kms
-  - decrypt
-  - --ciphertext-file=id_rsa.enc
-  - --plaintext-file=/root/.ssh/id_rsa
-  - --location=global
-  - --keyring=pspkeyring
-  - --key=githubkey
-  volumes:
-  - name: 'ssh'
-    path: /root/.ssh
-# Set up git with key and domain.
-- name: 'gcr.io/cloud-builders/git'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    chmod 600 /root/.ssh/id_rsa
-    cat <<EOF >/root/.ssh/config
-    Hostname github.com
-    IdentityFile /root/.ssh/id_rsa
-    EOF
-    mv known_hosts /root/.ssh/known_hosts
-  volumes:
-  - name: 'ssh'
-    path: /root/.ssh
 # This step commit new version and clones the psp-env repository
 - name: 'gcr.io/cloud-builders/git'
   args:
@@ -75,7 +76,8 @@ steps:
     git commit -m 'Updated version to $(echo VERSION) . [skip ci]'
     git push $BRANCH_NAME
     cd psp-env && \
-    git checkout $BRANCH_NAME 
+    git checkout $BRANCH_NAME && \
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') 
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
