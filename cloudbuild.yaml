@@ -72,16 +72,27 @@ steps:
     cd psp-env && \
     git checkout $(cat ../PSPENV_BRANCH) && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-# This step generates the new values
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Generate manifest
+- name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
   - '-c'
   - |
-    cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
-    sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
-    sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > values.yaml
+    go get gopkg.in/mikefarah/yq.v2
+    cd psp-env && \
+    yq w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
+    yq w -i values.yaml psp.image.tag ${SHORT_SHA} && \
+    cat values.yaml
+# This step generates the new values
+# - name: 'gcr.io/cloud-builders/gcloud'
+#   id: Generate manifest
+#   entrypoint: /bin/sh
+#   args:
+#   - '-c'
+#   - |
+#     cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
+#     sed "s/PSP_TAG/${SHORT_SHA}/g" | \
+#     sed "s/PSP_REPO/gcr.io/ind-si-infra-managment-184960\/psp-${BRANCH_NAME}"
+#     sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > values.yaml
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
