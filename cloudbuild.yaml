@@ -79,8 +79,8 @@ steps:
   - |
     go get gopkg.in/mikefarah/yq.v2
     cd psp-env && \
-    yq w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
-    yq w -i values.yaml psp.image.tag ${SHORT_SHA} && \
+    yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
+    yq.v2 w -i values.yaml psp.image.tag ${SHORT_SHA} && \
     cat values.yaml
 # This step generates the new values
 # - name: 'gcr.io/cloud-builders/gcloud'
