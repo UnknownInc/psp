@@ -4,7 +4,7 @@ steps:
   args:
   - '-c'
   - |
-    echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION)
+    echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION) > VERSION
 - name: gcr.io/cloud-builders/gcloud
   args:
   - kms
@@ -70,12 +70,12 @@ steps:
   args:
   - '-c'
   - |
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
     git add VERSION
     git commit -m 'Updated version to $(echo VERSION) . [skip ci]'
-    git push origin $BRANCH_NAME
+    git push
     cd psp-env && \
     git checkout $BRANCH_NAME && \
-    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
