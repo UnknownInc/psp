@@ -17,6 +17,7 @@ try {
   buildInfo.date = fs.readFileSync('BUILD_DATE', 'utf-8').trim();
   buildInfo.id = fs.readFileSync('BUILD_ID', 'utf-8').trim();
   buildInfo.commit = fs.readFileSync('COMMIT_ID', 'utf-8').trim();
+  buildInfo.version = fs.readFileSync('VERSION', 'utf-8').trim();
 } catch (err) {
   console.error('Unable to read build info file.', err);
 }

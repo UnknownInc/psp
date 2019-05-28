@@ -70,7 +70,7 @@ steps:
   - '-c'
   - |
     cd psp-env && \
-    git checkout $BRANCH_NAME && \
+    git checkout dev && \
     git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') 
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
@@ -109,7 +109,7 @@ steps:
     git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
-    git push origin $BRANCH_NAME
+    git push origin dev 
   volumes:
   - name: 'ssh'
     path: /root/.ssh
@@ -153,3 +153,8 @@ images:
 # images:
 # - [string, string, ...]
 # artifacts: object (Artifacts)
+
+# secrets:
+# - kmsKeyName: projects/[PROJECT-ID]/locations/global/keyRings/[KEYRING-NAME]/cryptoKeys/[KEY-NAME]
+#   secretEnv:
+#     MY_SECRET: <base64-encoded encrypted secret>
