@@ -1,29 +1,5 @@
 steps:
-- name: gcr.io/cloud-builders/gcloud
-  args:
-  - kms
-  - decrypt
-  - --ciphertext-file=secrets.json.enc
-  - --plaintext-file=secrets.json
-  - --location=global
-  - --keyring=pspkeyring
-  - --key=uisecrets
-  # build the container image
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', 
-  '--build-arg',
-  'BUILDID=${BUILD_ID}',
-  '--build-arg',
-  'COMMITID=${SHORT_SHA}',
-  '-t', 
-  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest',
-  '-t', 
-  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
-  '.']
-  env:
-  - 'BUILD=$BUILD_ID'
-  - 'COMMIT=$SHORT_SHA'
-# Decrypt the file containing the key
+# Decrypt the file containing the github ssh key
 - name: 'gcr.io/cloud-builders/gcloud'
   args:
   - kms
@@ -32,7 +8,7 @@ steps:
   - --plaintext-file=/root/.ssh/id_rsa
   - --location=global
   - --keyring=pspkeyring
-  - --key=github-key
+  - --key=githubkey
   volumes:
   - name: 'ssh'
     path: /root/.ssh
@@ -51,11 +27,40 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
+#update the version number
+# - name: gcr.io/cloud-builders/gcloud 
+#   entrypoint: bash
+#   args:
+#   - '-c'
+#   - |
+#     echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION) > VERSION
+# decrypt the secrets file
+- name: gcr.io/cloud-builders/gcloud
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=secrets.json.enc
+  - --plaintext-file=secrets.json
+  - --location=global
+  - --keyring=pspkeyring
+  - --key=uisecrets
+# build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', 
+  '--build-arg',
+  'BUILDID=${BUILD_ID}',
+  '--build-arg',
+  'COMMITID=${SHORT_SHA}',
+  '-t', 
+  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest',
+  '-t', 
+  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
+  '.']
 # This step clones the psp-env repository
 - name: 'gcr.io/cloud-builders/git'
   args:
   - clone
-  - git@github.com:UknownInc/psp-env
+  - git@github.com:UnknownInc/psp-env.git
   volumes:
   - name: 'ssh'
     path: /root/.ssh
@@ -66,18 +71,31 @@ steps:
   - |
     cd psp-env && \
     git checkout $BRANCH_NAME && \
-    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
-
-# This step generates the new values
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: Generate manifest
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') 
+- name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
   - '-c'
   - |
-     sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
-     sed "s/PSP_SHORT_SHA/${SHORT_SHA}/g" | \
-     sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > psp-env/values.yaml
+    export GOPATH=/root/go
+    export PATH=$$PATH:$$GOPATH/bin
+    echo $$PATH
+    go get -u gopkg.in/mikefarah/yq.v2
+    cd psp-env && \
+    yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
+    yq.v2 w -i values.yaml psp.image.tag ${SHORT_SHA} && \
+    cat values.yaml
+# This step generates the new values
+# - name: 'gcr.io/cloud-builders/gcloud'
+#   id: Generate manifest
+#   entrypoint: /bin/sh
+#   args:
+#   - '-c'
+#   - |
+#     cd psp-env && sed "s/GOOGLE_CLOUD_PROJECT/${PROJECT_ID}/g" values.yaml.tpl | \
+#     sed "s/PSP_TAG/${SHORT_SHA}/g" | \
+#     sed "s/PSP_REPO/gcr.io/ind-si-infra-managment-184960\/psp-${BRANCH_NAME}"
+#     sed "s/PSP_BRANCH_NAME/${BRANCH_NAME}/g" > values.yaml
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
@@ -92,14 +110,9 @@ steps:
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
     git push origin $BRANCH_NAME
-# - name: gcr.io/cloud-builders/git
-#   args: ['push', 'https://source.developers.google.com/p/$PROJECT_ID/r/myrepo', 'master']
-# push the container image to Container Registry
-# - name: 'gcr.io/cloud-builders/docker'
-#   args: ['push', 'gcr.io/$PROJECT_ID/psp']
-# Deploy container image to Cloud Run
-# - name: 'gcr.io/cloud-builders/gcloud'
-#   args: ['beta', 'run', 'deploy', 'psp','--namespace', 'prod', '--image', 'gcr.io/$PROJECT_ID/psp','--cluster', '${_CLUSTER_NAME}', '--cluster-location', '${_CLUSTER_LOCATION}']
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
 substitutions:
   _CLUSTER_NAME: 'psp-cluster-1'
   _CLUSTER_LOCATION: 'us-central1-a'
