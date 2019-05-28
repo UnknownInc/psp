@@ -62,7 +62,7 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
   - '-c'
