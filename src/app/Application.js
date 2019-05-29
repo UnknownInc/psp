@@ -7,6 +7,7 @@ export default class Application {
    * @param {object} param0
    */
   constructor({server, database, cache, logger, config}) {
+    logger.trace('Application.constructor');
     this.server = server;
     this.database = database;
     this.logger = logger;
@@ -18,7 +19,7 @@ export default class Application {
    * start the application
    */
   async start() {
-    this.logger.info(`Builtinfo: ${this.config.buildInfo.date}, commit: ${this.config.buildInfo.commit}`);
+    this.logger.info('Buildinfo: ', this.config.buildInfo);
 
     if (this.cache) {
       await this.cache.start();
