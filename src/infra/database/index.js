@@ -31,8 +31,6 @@ export default class Database {
   async authenticate() {
     this.logger.trace('Database.authenticate');
     const uri = `mongodb://${process.env['DB_SERVER']}:${process.env['DB_PORT']}/pulsedb`;
-    this.logger.debug(`DB auth ${process.env['DB_USERNAME']}`);
-    this.logger.debug(`DB auth ${process.env['DB_PASSWORD']}`);
     this.db = mongoose.createConnection();
 
     this.db.on('connected', ()=>{
