@@ -1,12 +1,14 @@
-const {Router} = require('express');
+const express = require('express');
+const path = require('path');
 
 // module.exports = ({ config, containerMiddleware,
 // loggerMiddleware, errorHandler, swaggerMiddleware }) => {
 module.exports = ({config, logger, cache, database}) => {
   logger.trace('Router.start');
   // eslint-disable-next-line new-cap
-  const router = Router();
+  const router = express.Router();
 
+  router.use(express.static('client/build'));
   router.get('/ping', (req, res)=>{
     res.send('pong');
   });
@@ -20,9 +22,13 @@ module.exports = ({config, logger, cache, database}) => {
   });
 
   // eslint-disable-next-line new-cap
-  const apiRouter = Router();
+  const apiRouter = express.Router();
   router.use('/api', apiRouter);
 
+
+  router.get('*', function(req, res) {
+    res.sendFile(path.join(__dirname, '../../../client/build', 'index.html'));
+  });
   // router.use(errorHandler);
 
   logger.trace('Router.end');

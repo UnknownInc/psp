@@ -1,0 +1,45 @@
+{
+  "name": "psp",
+  "version": "0.1.0",
+  "proxy": "http://localhost:8080",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.18",
+    "@fortawesome/free-solid-svg-icons": "^5.8.2",
+    "@fortawesome/react-fontawesome": "^0.1.4",
+    "@loadable/component": "^5.10.1",
+    "fast-csv": "^2.5.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-notify-toast": "^0.5.0",
+    "react-router-dom": "^5.0.0",
+    "react-scripts": "3.0.1",
+    "react-semantic-ui-datepickers": "0.0.0-semantically-released",
+    "react-sparklines": "^1.7.0",
+    "react-tageditor": "^0.2.3",
+    "semantic-ui-calendar-react": "^0.15.0",
+    "semantic-ui-react": "^0.87.1",
+    "uuid": "^3.3.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

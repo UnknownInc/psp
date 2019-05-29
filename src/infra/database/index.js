@@ -17,7 +17,11 @@ export default class Database {
    * returns the status of the db connection
    */
   get status() {
-    return {status: this._status, readyState: this.db.readyState};
+    return {
+      status: this._status,
+      readyState: this.db.readyState,
+      lastError: this.lastError,
+    };
   }
 
   /**
