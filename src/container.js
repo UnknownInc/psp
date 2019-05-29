@@ -9,6 +9,7 @@ import {
 import config from '../config';
 import logger from './infra/logging/logger';
 import Database from './infra/database';
+import Cache from './infra/cache';
 
 import Application from './app/Application';
 import Server from './interfaces/http/Server';
@@ -35,6 +36,7 @@ container
 container
     .register({
       database: asClass(Database).singleton(),
+      cache: asClass(Cache).singleton(),
     });
 
 // Load our modules!

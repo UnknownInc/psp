@@ -1,18 +1,4 @@
 steps:
-# Decrypt the file containing the github ssh key
-# - name: 'gcr.io/cloud-builders/gcloud'
-#   args:
-#   - kms
-#   - decrypt
-#   - --ciphertext-file=id_rsa.enc
-#   - --plaintext-file=/root/.ssh/id_rsa
-#   - --location=global
-#   - --keyring=pspkeyring
-#   - --key=githubkey
-#   volumes:
-#   - name: 'ssh'
-#     path: /root/.ssh
-# Set up git with key and domain.
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: 'bash'
   args:

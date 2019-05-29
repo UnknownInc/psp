@@ -23,7 +23,9 @@
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.16.4",
+    "ioredis": "^4.9.5",
     "log4js": "^4.2.0",
+    "mongoose": "^5.5.11",
     "morgan": "^1.9.1"
   },
   "devDependencies": {
