@@ -2,29 +2,27 @@ import React,{Component} from 'react'
 
 import {Loader} from 'semantic-ui-react';
 
-import {ACCOUNT_API, getHeaders} from '../config';
+import {ACCOUNT_API, getHeaders, getProfile} from '../config';
 
 class LoginSwitch extends Component {
   state = {
     loading: true
   }
   
-  componentWillMount(){
+  async componentWillMount(){
     this.setState({loading: true})
-    const headers= getHeaders();
-    
-    fetch(`${ACCOUNT_API}/api/profile`, { headers})
-      .then(res => res.json())
-      .then(profile => {
-        if (profile.error) {
-          this.setState({loading: false, profile: null})
-        } else { 
-          this.setState({loading: false, profile})
-        }
-      })
-      .catch(err=>{
-        this.setState({loading: false, profile: null})
-      })
+    const errorHdr = 'Unable to retrive the logged in user profile.';
+    try {
+      const {profile, errors} = await getProfile()
+      if (errors.length>0) {
+        this.setState({loading: false, profile, errors:errors, errorHdr});
+      } else {
+        this.setState({loading: false, profile, errors:null, errorHdr:null});
+      }
+    } catch (err) {
+      console.error(err);
+      this.setState({profile: null, errors:['Unknown error.', 'Please try again.'], loading: false, errorHdr});
+    }
   }
 
 

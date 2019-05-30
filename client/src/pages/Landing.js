@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { notify } from 'react-notify-toast'
 import Spinner from '../components/Spinner'
-import { ACCOUNT_API, getHeaders } from '../config'
+import { ACCOUNT_API, getHeaders, getProfile } from '../config'
 import Home from './Home'
 import { Dimmer, Form, Loader, Segment, Container } from 'semantic-ui-react';
 import Page from '../components/Page';
@@ -17,23 +17,21 @@ export default class Landing extends Component {
     sendingEmail: false
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.setState({loading: true})
 
-    const headers= getHeaders();
-    
-    fetch(`${ACCOUNT_API}/api/profile`, { headers})
-      .then(res => res.json())
-      .then(profile => {
-        if (profile.error) {
-          this.setState({loading: false, profile: null})
-        } else { 
-          this.setState({loading: false, profile})
-        }
-      })
-      .catch(err=>{
-        this.setState({loading: false, profile: null})
-      })
+    const errorHdr = 'Unable to retrive the user profile.';
+    try {
+      const {profile, errors} = await getProfile()
+      if (errors.length>0) {
+        this.setState({loading: false, profile, errors:errors, errorHdr});
+      } else {
+        this.setState({loading: false, profile, errors:null, errorHdr:null});
+      }
+    } catch (err) {
+      console.error(err);
+      this.setState({profile: null, errors:['Unknown error.', 'Please try again.'], loading: false, errorHdr});
+    }
   }
 
   handleChange = (event, {name, value}) => {
@@ -48,7 +46,7 @@ export default class Landing extends Component {
     event.preventDefault()
     this.setState({ sendingEmail: true})
     try{
-    const res = await fetch(`${ACCOUNT_API}/api/register`, {
+    const res = await fetch(`${ACCOUNT_API}/api/user/register`, {
       method: 'POST',
       headers: {
         accept: 'application/json', 

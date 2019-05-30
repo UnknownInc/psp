@@ -22,7 +22,7 @@ export const getProfile = async ()=>{
   }
   try{
     const headers= getHeaders();
-    const response =  await fetch(`${ACCOUNT_API}/api/profile`, { headers})
+    const response =  await fetch(`${ACCOUNT_API}/api/user/current`, { headers})
 
     if (response.status===401) {
       return {profile: null, errors: ['Not loggedin.']}
@@ -33,7 +33,7 @@ export const getProfile = async ()=>{
     }
 
     if (response.status>=400) {
-      return {profile: null, errors: ['Unable to retrive profile.']}
+      return {profile: null, errors: ['Unable to retrive loggedin user details.']}
     }
 
     const p = await response.json();
@@ -44,6 +44,6 @@ export const getProfile = async ()=>{
     },1800);
     return {profile:{...p}, errors: []}
   } catch (err) {
-    return {profile: null, errors: ['Unable to retrive profile']}
+    return {profile: null, errors: ['Unable to retrive loggedin user details.']}
   }
 }

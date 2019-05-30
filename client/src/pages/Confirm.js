@@ -34,7 +34,7 @@ export default class Confirm extends Component {
     const { id } = this.props.match.params
     this.setState({confirming: true})
 
-    fetch(`${ACCOUNT_API}/api/verify`,{
+    fetch(`${ACCOUNT_API}/api/user/verify`,{
       method: 'POST',
       headers: {
         accept: 'application/json', 

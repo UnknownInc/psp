@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 /**
  * Database infra for mongo db
  */
@@ -24,6 +25,18 @@ export default class Database {
     };
   }
 
+  /**
+   * connect the model to the db connection
+   */
+  createModels() {
+    this.Question = this.db.model('Question', require('../../schemas/question'));
+    this.QuestionSet = this.db.model('QuestionSet', require('../../schemas/questionset'));
+    this.Response = this.db.model('Response', require('../../schemas/response'));
+    this.User = this.db.model('User', require('../../schemas/user'));
+    this.Company = this.db.model('Company', require('../../schemas/company'));
+    this.Node = this.db.model('Node', require('../../schemas/node'));
+    this.Token = this.db.model('Token', require('../../schemas/token'));
+  }
   /**
    * Connect to the mongo db
    * @return {Promise} that gets resolved when the db is connected.
@@ -60,6 +73,7 @@ export default class Database {
         pass: process.env['DB_PASSWORD'],
         useNewUrlParser: true,
       });
+      this.createModels();
     } catch (err) {
       this.logger.error(`DB unable to connect to ${uri}`, err);
       throw err;

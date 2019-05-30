@@ -26,6 +26,9 @@ export default class Cache {
       password: process.env['CACHE_PASSWORD'],
     });
 
+    this.get = this.cache.get.bind(this.cache);
+    this.set = this.cache.set.bind(this.cache);
+
     this.cache.on('connect', (err) => {
       this.logger.info('REDIS: connected.');
       this.status.connectionStatus = 'connected';

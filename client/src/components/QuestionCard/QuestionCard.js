@@ -18,7 +18,7 @@ export default class QuestionCard extends Component {
   async componentDidMount(){
     try {
       const headers=getHeaders();
-      const response = await fetch(`${QUESTIONS_API}/api/currentquestion`, {headers})
+      const response = await fetch(`${QUESTIONS_API}/api/questions/current`, {headers})
 
       if (response.status===401) {
         this.setState({isNotLoggedIn: true, loading: false});

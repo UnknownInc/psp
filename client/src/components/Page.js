@@ -1,6 +1,6 @@
-import React,{Component} from 'react'
+import React from 'react'
 
-import {Loader, Dimmer, Image, Segment} from 'semantic-ui-react';
+import {Loader } from 'semantic-ui-react';
 
 
 export default props => {
