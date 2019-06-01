@@ -2,13 +2,10 @@ import React, {Component} from 'react';
 
 import Page from '../../components/Page';
 
-import { Container, Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab, Comment } from 'semantic-ui-react';
-import { getProfile } from '../../config';
+import { Container, Form, Header, Segment, Icon, Divider, Message, Tab } from 'semantic-ui-react';
+import {getHeaders, getProfile } from '../../config';
 import { isNullOrUndefined } from 'util';
 import TeamList from './TeamList';
-
-
-
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -33,6 +30,52 @@ class ProfilePage extends Component {
     }
   }
 
+  handleChange = async (event) => {
+    const {profile} = this.state
+    profile.name=event.target.value;
+    this.setState({profile})
+
+  }
+
+  handleUpdateProfile = async (e)=>{
+    e.preventDefault();
+    const {profile} = this.state;
+    this.setState({loading: true});
+    const headers = getHeaders();
+    const errorHdr = 'Unable to update the user profile.';
+    const errors=[];
+    try{
+      headers["Content-type"] = "application/json";
+      const body = {
+        name: profile.name
+      }
+      const response = await fetch(`/api/user/${profile._id}`, {
+          method: 'post',
+          headers,
+          body: JSON.stringify(body)
+        });
+      if (response.ok) {
+        const user = await response.json();
+        this.setState({loading: false, profile: user, errors:[], errorHdr: null})
+        return;
+      }
+      if (response.status===401) {
+        return this.setState({loading: false, errorHdr:'Not logged in.', errors})
+      }
+      if (response.status===403) {
+        return this.setState({loading: false, errorHdr:'Not Authorized.', errors})
+      }
+      throw new Error('Invalid status from te server')
+    } catch (err) {
+      console.error(err);
+      if (err.message) {
+        errors.push(err.message);
+      }
+    }
+    errors.push('Unknown error.', 'Please try again.');
+    this.setState({profile: null, errors, loading: false, errorHdr});
+  }
+
   renderError() {
     const {errorHdr, errors=[]} = this.state;
     if (!errorHdr) return null
@@ -51,7 +94,7 @@ class ProfilePage extends Component {
       </Form.Field>
       <Divider/>
       <Form.Group>
-        <Form.Button color='blue'>Update</Form.Button>
+        <Form.Button color='blue' onClick={this.handleUpdateProfile}>Update</Form.Button>
       </Form.Group>
     </Form>
   }

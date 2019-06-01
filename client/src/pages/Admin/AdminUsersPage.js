@@ -43,7 +43,7 @@ class AdminUsersPage extends Component {
     try {
       this.setState({loading: true, error:null});
       const headers=getHeaders();
-      const res = await fetch(`${USER_API}/api/users?offset=${this.state.offset}&limit=${this.state.limit}`, { headers})
+      const res = await fetch(`${USER_API}/api/user?offset=${this.state.offset}&limit=${this.state.limit}`, { headers})
 
       if (!res.ok) {
         return this.setState({loading: false, error:{header:res.statusText}})

@@ -23,7 +23,6 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
           if (err) {
             logger.error('CACHE error retriving user by email from cache.',
                 err);
-            return next();
           }
           if (!result) {
             // const company = (parseCompany(email)||'').trim();
@@ -38,7 +37,7 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
               cache.set(email, JSON.stringify(result), 'EX', 3600);
             } catch (ex) {
               logger.error('userAuthorization error reading from db', ex);
-              return res.sendStatus(403);
+              return res.sendStatus(401);
             }
           } else {
             result = JSON.parse(result);

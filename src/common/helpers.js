@@ -1,4 +1,4 @@
-
+/* eslint-disable no-invalid-this */
 /**
  * parses the company name from email
  * @param {string} email address
@@ -51,3 +51,27 @@ export function getEmailParts(emailAddress) {
     domain,
   };
 }
+
+/**
+ * asyncHelper function for async loops
+ */
+export function AsyncHelper() {
+  const self = this;
+
+  this.each = async (items, fn) => {
+    if (items && items.length) {
+      await Promise.all(
+          items.map(async (item) => {
+            await fn(item);
+          }));
+    }
+  };
+
+  this.reduce = async (items, fn, initialValue) => {
+    await self.each(
+        items, async (item) => {
+          initialValue = await fn(initialValue, item);
+        });
+    return initialValue;
+  };
+};

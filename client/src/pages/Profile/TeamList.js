@@ -8,6 +8,7 @@ class TeamList extends Component {
   constructor(props) {
     super(props);
     this.state={
+      userid: this.props.user,
       loading: true
     }
   }
@@ -18,14 +19,21 @@ class TeamList extends Component {
       const headers= getHeaders();
       const response = await fetch(`${ACCOUNT_API}/api/team?user=${this.props.user}`, {headers})
 
-      if (response.status===401) {
-        return this.setState({loading: false, errorHdr:'Not logged in.', errors:[]})
+      if (response.ok) {
+        const teams = await response.json();
+        this.setState({loading: false, errorHdr:null, errors:[], teams});
+        return;
       }
-      if (response.status>=400) {
-        return this.setState({loading: false, errorHdr:'Unknown error', errors:[]})
+
+      switch(response.status) {
+        case 401: {
+            return this.setState({loading: false, errorHdr:'Not logged in.', errors:[]})
+        }
+        case 403: {
+          return this.setState({loading: false, errorHdr:'Not Authorized.', errors:[]})
+        }
+        default: throw new Error('Invalid status from the server.')
       }
-      const teams = await response.json();
-      this.setState({loading: false, errorHdr:null, errors:[], teams});
     } catch (err) {
       this.setState({loading: false, errorHdr:'Unable to retrive the teams.', errors:[]})
     }
@@ -41,6 +49,7 @@ class TeamList extends Component {
     const {teams=[]}= this.state;
     return <div>
       {this.renderErrors()}
+      <Header as={'h3'} dividing>My Teams <small><Popup trigger={<Button icon='plus'/>}>Create a new team</Popup></small></Header>
       {teams.map((t)=><TeamView team={t} key={t._id}/>)}
     </div>
   }

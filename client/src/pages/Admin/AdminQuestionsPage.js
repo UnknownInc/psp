@@ -4,7 +4,6 @@ import csv from "fast-csv";
 
 import { notify } from 'react-notify-toast'
 
-import Spinner from '../../components/Spinner'
 import { QUESTIONS_API, getHeaders } from '../../config'
 import QuestionForm from './QuestionForm';
 import { Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab } from 'semantic-ui-react';
@@ -60,7 +59,7 @@ class AdminQuestionsPage extends Component {
 
     const headers= getHeaders();
     
-    fetch(`${QUESTIONS_API}/api/questions?set=${this.state.questionSet}`, { headers})
+    fetch(`${QUESTIONS_API}/api/question?set=${this.state.questionSet}`, { headers})
       .then(res => res.json())
       .then(questions => {
         this.setState({loading: false, items: questions, isNotAuthorized:false})
@@ -142,7 +141,7 @@ class AdminQuestionsPage extends Component {
         questions:newQuestions
       })
       try {
-        const res = await fetch(`${QUESTIONS_API}/api/questions?set=${this.state.questionSet}`, { headers, method: 'POST',  body})
+        const res = await fetch(`${QUESTIONS_API}/api/question?set=${this.state.questionSet}`, { headers, method: 'POST',  body})
 
         if (res.ok) {
           const questions = await res.json();
@@ -164,7 +163,7 @@ class AdminQuestionsPage extends Component {
         const body = JSON.stringify({
           questions: modifiedQuestions
         })
-        const res = await fetch(`${QUESTIONS_API}/api/questions?set=${this.state.questionSet}`, { headers, method: 'PUT',  body})
+        const res = await fetch(`${QUESTIONS_API}/api/question?set=${this.state.questionSet}`, { headers, method: 'PUT',  body})
         if (res.ok) {
           modifiedQuestions.forEach(q=>{q.isModified=undefined})
           notify.show(`Updated ${modifiedQuestions.length} questions.`)

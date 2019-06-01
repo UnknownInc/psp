@@ -10,16 +10,16 @@ export default class Cache {
    */
   constructor({config, logger}) {
     this.config = config;
-    this.logger = logger;
+    this.logger = logger('Cache');
     this.status = {};
-    this.logger.trace('Cache.constructor');
+    this.logger.trace('constructor');
   }
 
   /**
    * starts the connection to the cache
    */
-  async start() {
-    this.logger.trace('Cache.start');
+  async connect() {
+    this.logger.trace('connect');
     this.cache = new Redis({
       host: process.env['CACHE_SERVER'],
       port: Number.parseInt(process.env['CACHE_PORT']),

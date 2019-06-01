@@ -22,7 +22,7 @@ export const getProfile = async ()=>{
   }
   try{
     const headers= getHeaders();
-    const response =  await fetch(`${ACCOUNT_API}/api/user/current`, { headers})
+    const response =  await fetch(`/api/user/current`, { headers})
 
     if (response.status===401) {
       return {profile: null, errors: ['Not loggedin.']}

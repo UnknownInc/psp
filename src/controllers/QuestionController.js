@@ -16,7 +16,7 @@ export default class QuestionController {
   constructor({logger,
     config, cache, database,
     userAuthorizationMiddleware}) {
-    this.logger = logger;
+    this.logger = logger('QuestionController');
     this.config = config;
     this.database = database;
     this.userAuthorizationMiddleware = userAuthorizationMiddleware;
@@ -44,7 +44,7 @@ export default class QuestionController {
    * @return {any} nothing
    */
   async getQuestions(req, res) {
-    this.logger.trace('QuestionController.getQuestion:'+req.params.id);
+    this.logger.trace('getQuestions');
     const user = req.user;
     if (!user) {
       return res.status(401).json({
@@ -55,15 +55,32 @@ export default class QuestionController {
     if (!user.isAdmin) {
       return res.sendStaus(403);
     }
+
+    const Question = this.database.Question;
+    // TODO: validate the questions query parameters
+    const query={};
+
+    try {
+      const results = await Question.find(query);
+      const questions=[];
+      results.forEach((q) => {
+        questions.push(q.toObject());
+      });
+      return res.json(questions);
+    } catch (err) {
+      console.error(err);
+      return res.status(500);
+    }
   }
 
   /**
-   * gets the a question identifie by the id
+   * gets the a question identified by the id
    * @param {express.request} req request object
    * @param {express.response} res response object
    * @return {any} nothing
    */
   async getQuestion(req, res) {
+    this.logger.trace('getQuestion:'+req.params.id);
     const user = req.user;
     if (!user) {
       return res.status(401).json({
@@ -87,6 +104,15 @@ export default class QuestionController {
 
     if (!user.isAdmin) {
       return res.sendStaus(403);
+    }
+
+    try {
+      // eslint-disable-next-line new-cap
+      const result = await Question.findOne({_id: ObjectId(req.params.id)})
+      return res.json(result.toObject());
+    } catch (err) {
+      console.error(err);
+      return res.status(500);
     }
   }
 }

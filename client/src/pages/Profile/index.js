@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 import loadable from '@loadable/component'
 import Page from '../../components/Page';
 

@@ -1,16 +1,28 @@
 import React, {Component} from 'react';
-import { Container, Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab, Comment, Loader, Input, Label } from 'semantic-ui-react';
+import { Form, Header, Icon, Button, Divider, Message, Modal, Comment, Loader, Input, Accordion } from 'semantic-ui-react';
 
-import { ACCOUNT_API, getHeaders } from '../../config'
+import { getHeaders } from '../../config'
+
+class TeamMembers extends Component {
+  constructor(props){
+    super(props);
+    this.state={
+      email: props.email,
+      team: null,
+    }
+  }
+
+}
 
 class TeamView extends Component {
 
   constructor(props){
     super(props);
+    const team=this.props.team;
     this.state={
       newteammember:'',
-      name:this.props.team.name,
-      team:this.props.team
+      name:team.name,
+      team:team
     }
   }
   async componentDidMount(){
@@ -30,19 +42,24 @@ class TeamView extends Component {
       const remove=[];
       if (this.state.newteammember) { add.push(this.state.newteammember)}
       const body={add, remove, name: this.state.name};
-      const response = await fetch(`${ACCOUNT_API}/api/team/${this.props.team._id}`, {headers, method:'PUT', body:JSON.stringify(body)})
+      const response = await fetch(`/api/team/${this.props.team._id}`, {headers, method:'PUT', body:JSON.stringify(body)})
 
-      if (response.status===401) {
-        return this.setState({loading: false, errorHdr:'Not logged in.', errors:[]})
+      if (response.ok) {
+        const team = await response.json();
+        team.children=team.children||[];
+        this.setState({team, name:team.name, loading: false, errorHdr:null, errors:[], newteammember:'', nerror: null})
+        return;
       }
-      if (response.status>=400) {
-        return this.setState({loading: false, errorHdr:'Unknown error', errors:[]})
+
+      switch(response.status){
+        case 401:{
+          return this.setState({loading: false, errorHdr:'Not logged in.', errors:[]})
+        }
+        case 403: {
+          return this.setState({loading: false, errorHdr:'Not Authorized.', errors:[]})
+        }
+        default: throw new Error('Invalid status from the server.')
       }
-
-      const team = await response.json();
-      team.children=team.children||[];
-      this.setState({team, name:team.name, loading: false, errorHdr:null, errors:[], newteammember:''})
-
     } catch (err) {
       this.setState({loading: false, errorHdr:'Unable to add team member.', errors:[]})
     }
@@ -89,17 +106,65 @@ class TeamView extends Component {
       </Modal.Actions>
     </Modal>
   }
+  renderTeamAddMemberButton(){
+    const {newteammember, team, nerror} = this.state;
+    const i=team.user.email.indexOf('@');
+    const domain=team.user.email.substr(i);
+    return <Modal trigger={<Icon.Group>
+        <Icon name='user' />
+        <Icon corner name='add' />
+      </Icon.Group>}>
+        <Modal.Header>Add Team member</Modal.Header>
+        <Modal.Content>
+          <Modal.Description>
+            <Form>
+              <Form.Field>
+                <label>User email</label>
+                <Input value={newteammember} placeholder={'someone@'+domain} 
+                  error={nerror!==null}
+                  onChange={e=>{
+                    const i=e.target.value.indexOf('@');
+                    let nerror='invalid email domain'
+                    if (e.target.value.substr(i)===domain) {
+                      nerror=null;
+                    }
+                    this.setState({newteammember: e.target.value, nerror});
+                  }}
+                  // label={{ basic: true, content: domain }}
+                  // labelPosition='right'
+                  />
+              </Form.Field>
+            </Form>
+          </Modal.Description>
+        </Modal.Content>
+        <Modal.Actions>
+          <Button color='green' icon='check' onClick={this.addNewTeamMember} content={'Add'} disabled={nerror!==null}/>
+        </Modal.Actions>
+      </Modal>
+  }
+
   renderTeam() {
     const {name, team={}}=this.state;
     const {children=[]}=team;
-    return <Comment.Group>
-      <Header as={'h3'} ><small>Team Name: </small>
-        <span> {name==''?'\u226A unspecified \u226B':name}&nbsp;&nbsp;</span>
+    const teamPanels=children.map(c=>{
+      return {
+        key: c.email,
+        title: c.email,
+        content:{
+          content:this.renderTeamMember(c)
+        }
+      }
+    })
+    return <div>
+      <Header as={'h4'} >
+        <span> {name===''?'\u226A unspecified \u226B':name}&nbsp;&nbsp;</span>
           <small>{this.renderTeamEditButton()}</small>
+          <small>{this.renderTeamAddMemberButton()}</small>
       </Header>
-      {children.map((u,i)=>this.renderTeamMember(u))}
+      {/* children.map((u,i)=>this.renderTeamMember(u)) */}
+      <Accordion panels={teamPanels} exclusive={false} styled/>
       <Divider/>
-    </Comment.Group>
+    </div>
   }
   render(){
     const {loading} = this.state

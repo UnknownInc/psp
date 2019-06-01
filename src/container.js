@@ -16,6 +16,7 @@ import Server from './interfaces/http/Server';
 import router from './interfaces/http/Router';
 
 import userAuthorization from './interfaces/http/userAuthorizationMiddleware';
+import loggerMiddleware from './interfaces/http/loggingMiddleware';
 import mailer from './infra/mailer';
 
 const container = createContainer();
@@ -25,9 +26,10 @@ container
     .register({
       app: asClass(Application).singleton(),
       server: asClass(Server).singleton(),
+
+      loggerMiddleware: asFunction(loggerMiddleware).singleton(),
       containerMiddleware: asValue(scopePerRequest(container)),
       userAuthorizationMiddleware: asFunction(userAuthorization).singleton(),
-      mailer: asFunction(mailer).singleton(),
     })
     .register({
       config: asValue(config),
@@ -42,15 +44,18 @@ container
     .register({
       database: asClass(Database).singleton(),
       cache: asClass(Cache).singleton(),
+      mailer: asFunction(mailer).singleton(),
     });
 
 
 import UserController from './controllers/UserController';
 import QuestionController from './controllers/QuestionController';
+import TeamController from './controllers/TeamController';
 container
     .register({
       userController: asClass(UserController),
       questionController: asClass(QuestionController),
+      teamController: asClass(TeamController),
     });
 /*
 // with `loadModules`

@@ -19,7 +19,7 @@ export default class UserController {
   constructor({logger,
     config, cache, database, mailer,
     userAuthorizationMiddleware}) {
-    this.logger = logger;
+    this.logger = logger('UserController');
     this.config = config;
     this.database = database;
     this.userAuthorizationMiddleware = userAuthorizationMiddleware;
@@ -30,6 +30,7 @@ export default class UserController {
     this.register = this.register.bind(this);
     this.getUsers = this.getUsers.bind(this);
     this.verify = this.verify.bind(this);
+    this.updateUser = this.updateUser.bind(this);
   }
 
   /**
@@ -42,6 +43,7 @@ export default class UserController {
     router.post('/register', this.register);
     router.post('/verify', this.verify);
     router.get('/:id', this.userAuthorizationMiddleware, this.getUser);
+    router.post('/:id', this.userAuthorizationMiddleware, this.updateUser);
     // router.post('/', inject('createUser'), this.create);
     // router.put('/:id', inject('updateUser'), this.update);
     // router.delete('/:id', inject('deleteUser'), this.delete);
@@ -75,7 +77,7 @@ export default class UserController {
    * @return {*} if successful returns the matched user
    */
   getUser(req, res) {
-    this.logger.trace('UserController.getUser', req.params.id);
+    this.logger.trace('getUser', req.params.id);
     const user = req.user;
     if (!user) {
       return res.status(401).json({
@@ -92,18 +94,65 @@ export default class UserController {
   }
 
   /**
+   * update user
+   * @param {*} req request object
+   * @param {*} res response object
+   * @return {any} nothing
+   */
+  async updateUser(req, res) {
+    this.logger.trace('updateUser', req.params.id);
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+    const uid = req.params.id||user._id;
+
+    if (uid!==user._id) {
+      if (!user.isAdmin) {
+        return res.sendStaus(403);
+      }
+    }
+
+    const User = this.database.User;
+
+    try {
+      const u = await User.findOne({_id: uid});
+      if (!u) {
+        return res.sendStaus(404);
+      }
+
+      if (req.body.name) {
+        u.name= req.body.name;
+      }
+
+      await u.save();
+
+      const result = u.toObject();
+      result.isAdmin = user.isAdmin;
+      // set to expire after 1 hour
+      this.cache.set(u.email.toLowerCase(), JSON.stringify(result), 'EX', 3600);
+      return res.json(u.toObject());
+    } catch (err) {
+      this.logger.error('updateUser exception:', err);
+      return res.sendStaus(500);
+    }
+  }
+
+  /**
    * register by email
    * @param {*} req request object
    * @param {*} res response object
    * @return {any} nothing
    */
   async register(req, res) {
-    this.logger.trace('UserController.register');
+    this.logger.trace('register');
     const email = (req.body.email||'').trim().toLowerCase();
     const payload = getEmailParts(email);
     const companyUrl = `${req.protocol}://${req.get('host')}`;
 
-    this.logger.debug('UserController.register payload', payload);
+    this.logger.debug('register payload', payload);
     if (!payload.isValid || payload.company==='') {
       res.status(400).json({
         error: 'Invalid email.',
@@ -173,7 +222,7 @@ export default class UserController {
    * @return {any} nothing
    */
   async verify(req, res) {
-    this.logger.trace('UserController.verify');
+    this.logger.trace('verify');
 
     const token = (req.body.token||'').trim().toLowerCase();
     const email = (req.body.email||'').trim().toLowerCase();
@@ -229,14 +278,14 @@ export default class UserController {
       const Node= this.database.Node;
       try {
         // eslint-disable-next-line new-cap
-        const n = await Node.findOne({user: ObjectId(user._id)});
+        const n = await Node.findOne({user: ObjectId(user._id), type: 'default'});
         if (!n) {
           // eslint-disable-next-line new-cap
-          const n = new Node({user: ObjectId(user._id)});
+          const n = new Node({user: ObjectId(user._id), type: 'default'});
           await n.save();
         }
       } catch (ex) {
-        this.logger.error('UserController.verify exception', ex);
+        this.logger.error('verify exception', ex);
       }
       return res.status(200).json({
         message: 'Successfully verified.',

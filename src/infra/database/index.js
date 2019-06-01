@@ -9,9 +9,9 @@ export default class Database {
    * @param {object} options {config, logging}
    */
   constructor({config, logger}) {
-    logger.trace('Database.constructor');
     this.config=config;
-    this.logger=logger;
+    this.logger=logger('DB');
+    this.logger.trace('constructor');
   }
 
   /**
@@ -37,18 +37,14 @@ export default class Database {
     this.Node = this.db.model('Node', require('../../schemas/node'));
     this.Token = this.db.model('Token', require('../../schemas/token'));
   }
-  /**
-   * Connect to the mongo db
-   * @return {Promise} that gets resolved when the db is connected.
-   */
-  async authenticate() {
-    this.logger.trace('Database.authenticate');
-    const uri = `mongodb://${process.env['DB_SERVER']}:${process.env['DB_PORT']}/pulsedb`;
-    this.db = mongoose.createConnection();
 
+  /**
+   * listen to mongo db events
+   */
+  _setupDBEvents() {
     this.db.on('connected', ()=>{
       this._status='connected';
-      this.logger.info(`DB connected to ${uri}.`);
+      this.logger.info(`DB connected.`);
     });
 
     this.db.on('error', (err)=>{
@@ -65,9 +61,21 @@ export default class Database {
       this._status='disconnected';
       this.logger.error('DB disconnected');
     });
+  }
+
+  /**
+   * Connect to the mongo db
+   * @return {Promise} that gets resolved when the db is connected.
+   */
+  async connect() {
+    this.logger.trace('connect');
+    const uri = `mongodb://${process.env['DB_SERVER']}:${process.env['DB_PORT']}/pulsedb`;
+    this.db = mongoose.createConnection();
+
+    this._setupDBEvents();
 
     try {
-      this.logger.debug('DB connecting to '+uri);
+      this.logger.debug('DB connecting to ' + uri);
       await this.db.openUri(uri, {
         user: process.env['DB_USERNAME'],
         pass: process.env['DB_PASSWORD'],

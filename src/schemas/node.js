@@ -8,6 +8,8 @@ const ObjectId = Schema.Types.ObjectId;
 const fields = {
   name: {type: String, default: ''},
   user: {type: ObjectId, ref: 'User'},
+  children: [{type: ObjectId, ref: 'User'}],
+  type: {type: String},
   tags: [String],
   createdAt: {type: Date, default: Date.now},
 };

@@ -7,10 +7,10 @@ export default class Application {
    * @param {object} param0
    */
   constructor({server, database, cache, logger, config}) {
-    logger.trace('Application.constructor');
+    this.logger = logger('Application');
+    this.logger.trace('constructor');
     this.server = server;
     this.database = database;
-    this.logger = logger;
     this.config = config;
     this.cache = cache;
   }
@@ -22,10 +22,10 @@ export default class Application {
     this.logger.info('Buildinfo: ', this.config.buildInfo);
 
     if (this.cache) {
-      await this.cache.start();
+      await this.cache.connect();
     }
     if (this.database) {
-      await this.database.authenticate();
+      await this.database.connect();
     }
 
     await this.server.start();
