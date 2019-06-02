@@ -219,7 +219,7 @@ export default class TeamController {
       teamNode = await teamNode.save();
       teamNode = await Node.populate(teamNode, {
         'path': 'children',
-        'select': 'email',
+        'select': ['email', 'name'],
       });
       return res.json(teamNode.toObject());
     } catch (err) {
@@ -277,7 +277,7 @@ export default class TeamController {
         const t = await Node.populate(nl[i],
             [
               {'path': 'user', 'select': 'email'},
-              {'path': 'children', 'select': 'email'},
+              {'path': 'children', 'select': ['email', 'name']},
             ]);
         const node= t.toObject();
         // const children= await nl[i].getImmediateChildren({});

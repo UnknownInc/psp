@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import { Container, Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab, Comment, Loader, Input } from 'semantic-ui-react';
+import { Header, Button, Message, Popup, Accordion, Label, Icon, Grid, GridColumn } from 'semantic-ui-react';
 
-import { ACCOUNT_API, getHeaders } from '../../config'
+import { getProfile, getHeaders } from '../../config'
 import TeamView from './TeamView';
 
 class TeamList extends Component {
@@ -16,8 +16,23 @@ class TeamList extends Component {
   async componentWillMount(){
     this.setState({loading: true, errorHdr:null, errors:[]})
     try{
+      const res= await getProfile();
+      
+      this.setState({loggedInUserId: res.profile._id});
+      if (this.props.preload) {
+        await this.loadTeams()
+      }
+    } catch (err) {
+      this.setState({loading: false, errorHdr:'Unable to retrive the teams.', errors:[]})
+    }
+  }
+
+  loadTeams=async () => {
+    this.setState({loading: true, errorHdr:null, errors:[]})
+    try{
+
       const headers= getHeaders();
-      const response = await fetch(`${ACCOUNT_API}/api/team?user=${this.props.user}`, {headers})
+      const response = await fetch(`/api/team?user=${this.props.user}`, {headers})
 
       if (response.ok) {
         const teams = await response.json();
@@ -34,7 +49,7 @@ class TeamList extends Component {
         }
         default: throw new Error('Invalid status from the server.')
       }
-    } catch (err) {
+    }catch (err) {
       this.setState({loading: false, errorHdr:'Unable to retrive the teams.', errors:[]})
     }
   }
@@ -46,11 +61,27 @@ class TeamList extends Component {
   }
 
   render(){
-    const {teams=[]}= this.state;
+    const {teams=[], loggedInUserId, userid}= this.state;
     return <div>
       {this.renderErrors()}
-      <Header as={'h3'} dividing>My Teams <small><Popup trigger={<Button icon='plus'/>}>Create a new team</Popup></small></Header>
-      {teams.map((t)=><TeamView team={t} key={t._id}/>)}
+      {loggedInUserId===userid?<Popup trigger={<Button icon='plus' content='new team'/>}>Create a new team</Popup>:null}
+      <div>
+        {teams.length===0?<Button onClick={this.loadTeams}>Load Teams</Button>:null}
+      </div>
+      <Accordion panels={teams.map((t)=>{
+        const {name, children=[]}=t;
+        return {
+          key: t._id,
+          title: {
+            content:<span>
+              <Icon name='users'/> {name} <Label circular color={'grey'}>{children.length}</Label>
+            </span>
+          },
+          content:{
+            content:<TeamView team={t} key={t._id} loggedInUserId={loggedInUserId} styled/>
+          }
+        }
+      })} exclusive={false} styled fluid/>
     </div>
   }
 }

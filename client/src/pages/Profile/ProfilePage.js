@@ -99,7 +99,7 @@ class ProfilePage extends Component {
     </Form>
   }
   renderTeam(){
-    return <TeamList user={this.state.profile._id} editor/>
+    return <TeamList user={this.state.profile._id} editor preload/>
   }
   renderProfile(){
     const {profile} = this.state;

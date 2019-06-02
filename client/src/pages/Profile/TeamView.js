@@ -1,18 +1,8 @@
 import React, {Component} from 'react';
-import { Form, Header, Icon, Button, Divider, Message, Modal, Comment, Loader, Input, Accordion } from 'semantic-ui-react';
+import { Form, Header, Icon, Button, Divider, Message, Modal, Comment, Loader, Input, Accordion, Grid } from 'semantic-ui-react';
 
-import { getHeaders } from '../../config'
-
-class TeamMembers extends Component {
-  constructor(props){
-    super(props);
-    this.state={
-      email: props.email,
-      team: null,
-    }
-  }
-
-}
+import { getHeaders, getProfile } from '../../config'
+import TeamList from './TeamList';
 
 class TeamView extends Component {
 
@@ -20,12 +10,21 @@ class TeamView extends Component {
     super(props);
     const team=this.props.team;
     this.state={
+      loggedInUserId: this.props.loggedInUserId,
       newteammember:'',
       name:team.name,
       team:team
     }
   }
   async componentDidMount(){
+    try{
+      if (this.state.loggedInUserId===undefined){
+        const res = await getProfile(); 
+        this.setState({loggedInUserId: res.profile._id});
+      }
+    } catch(err) {
+      console.error(err);
+    }
   }
 
   handleChange = (e) => this.setState({newteammember: e.target.value});
@@ -144,26 +143,32 @@ class TeamView extends Component {
   }
 
   renderTeam() {
-    const {name, team={}}=this.state;
+    const {name, team={user:{}}, loggedInUserId}=this.state;
     const {children=[]}=team;
     const teamPanels=children.map(c=>{
       return {
         key: c.email,
-        title: c.email,
+        title: (!c.name || c.name==='')? c.email:c.name,
         content:{
-          content:this.renderTeamMember(c)
+          content:
+          <Grid>
+            <Grid.Column width={1}><span>&nbsp;</span></Grid.Column>
+            <Grid.Column width={15}> 
+              <TeamList user={c._id}/>
+            </Grid.Column>
+          </Grid>
         }
       }
     })
+    console.log(team.name+':'+team.user._id+':'+loggedInUserId)
     return <div>
-      <Header as={'h4'} >
-        <span> {name===''?'\u226A unspecified \u226B':name}&nbsp;&nbsp;</span>
+      {loggedInUserId===team.user._id?<Header as={'h4'} >
+        <span> {name===''?'\u226A Team 1 \u226B':name}&nbsp;&nbsp;</span>
           <small>{this.renderTeamEditButton()}</small>
           <small>{this.renderTeamAddMemberButton()}</small>
-      </Header>
+      </Header>:null}
       {/* children.map((u,i)=>this.renderTeamMember(u)) */}
-      <Accordion panels={teamPanels} exclusive={false} styled/>
-      <Divider/>
+      <Accordion panels={teamPanels} exclusive={false}/>
     </div>
   }
   render(){
