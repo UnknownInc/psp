@@ -1,0 +1,17 @@
+@font-face {
+    src: url(assets/fonts/FuturaNext/FuturaNext_Light.otf);
+    font-family: fnlight;
+}
+
+@font-face {
+    src: url(assets/fonts/Minion/MinionPro-Medium.otf);
+    font-family: minion;
+}
+  
+body {
+    font-family: fnlight, Roboto, sans-serif;
+    background: #eeeeee;
+    color: #333333;
+    margin: 0px;
+    padding: 0px;
+}

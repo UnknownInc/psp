@@ -4,16 +4,20 @@ import {
   asFunction,
   asValue,
 } from 'awilix';
-// const {scopePerRequest} = require('awilix-express');
+const {scopePerRequest} = require('awilix-express');
 
 import config from '../config';
 import logger from './infra/logging/logger';
 import Database from './infra/database';
+import Cache from './infra/cache';
 
 import Application from './app/Application';
 import Server from './interfaces/http/Server';
 import router from './interfaces/http/Router';
 
+import userAuthorization from './interfaces/http/userAuthorizationMiddleware';
+import loggerMiddleware from './interfaces/http/loggingMiddleware';
+import mailer from './infra/mailer';
 
 const container = createContainer();
 
@@ -22,6 +26,10 @@ container
     .register({
       app: asClass(Application).singleton(),
       server: asClass(Server).singleton(),
+
+      loggerMiddleware: asFunction(loggerMiddleware).singleton(),
+      containerMiddleware: asValue(scopePerRequest(container)),
+      userAuthorizationMiddleware: asFunction(userAuthorization).singleton(),
     })
     .register({
       config: asValue(config),
@@ -35,8 +43,30 @@ container
 container
     .register({
       database: asClass(Database).singleton(),
+      cache: asClass(Cache).singleton(),
+      mailer: asFunction(mailer).singleton(),
     });
 
+
+import UserController from './controllers/UserController';
+import QuestionController from './controllers/QuestionController';
+import TeamController from './controllers/TeamController';
+container
+    .register({
+      userController: asClass(UserController),
+      questionController: asClass(QuestionController),
+      teamController: asClass(TeamController),
+    });
+/*
+// with `loadModules`
+container.loadModules([
+  [
+    'controllers/*.js',
+  ],
+], {
+  formatName: 'camelCase',
+});
+*/
 // Load our modules!
 // container.loadModules([
 //   // Globs!

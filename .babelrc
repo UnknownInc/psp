@@ -3,5 +3,6 @@
   "plugins": [
     "@babel/plugin-transform-regenerator",
     "@babel/transform-runtime",
+    "@babel/plugin-proposal-class-properties",
   ]
 }

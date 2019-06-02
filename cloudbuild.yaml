@@ -1,42 +1,35 @@
 steps:
-# Decrypt the file containing the github ssh key
-- name: 'gcr.io/cloud-builders/gcloud'
-  args:
-  - kms
-  - decrypt
-  - --ciphertext-file=id_rsa.enc
-  - --plaintext-file=/root/.ssh/id_rsa
-  - --location=global
-  - --keyring=pspkeyring
-  - --key=githubkey
-  volumes:
-  - name: 'ssh'
-    path: /root/.ssh
-# Set up git with key and domain.
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
+    gcloud kms decrypt \
+    --ciphertext-file=id_rsa.enc \
+    --plaintext-file=/root/.ssh/id_rsa \
+    --location=global \
+    --keyring=pspkeyring \
+    --key=githubkey
     chmod 600 /root/.ssh/id_rsa
     cat <<EOF >/root/.ssh/config
     Hostname github.com
     IdentityFile /root/.ssh/id_rsa
     EOF
     mv known_hosts /root/.ssh/known_hosts
-    echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION)
+    git clone git@github.com:UnknownInc/psp.git 
+    cd psp && \
+    git checkout $BRANCH_NAME && \
+    git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)') && \
+    echo $(perl -pe 's/^((\d+\.)*)(\d+)(.*)$/$1.($3+1).$4/e' < VERSION) > VERSION && \
+    gcloud kms decrypt \
+    --ciphertext-file=secrets.json.enc \
+    --plaintext-file=secrets.json \
+    --location=global \
+    --keyring=pspkeyring \
+    --key=uisecrets
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-- name: gcr.io/cloud-builders/gcloud
-  args:
-  - kms
-  - decrypt
-  - --ciphertext-file=secrets.json.enc
-  - --plaintext-file=secrets.json
-  - --location=global
-  - --keyring=pspkeyring
-  - --key=uisecrets
 # build the container image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', 
@@ -49,12 +42,17 @@ steps:
   '-t', 
   'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
   '.']
+  dir: "psp"
 # This step clones the psp-env repository & checkout dev
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: bash
   args:
   - '-c'
   - |
+    git add VERSION 
+    git commit -m "Updated VERSION [skip ci]
+    Author: $(git log --format='%an <%ae>' -n 1 HEAD)"
+    git push origin $BRANCH_NAME
     git clone git@github.com:UnknownInc/psp-env.git
     cd psp-env && \
     git checkout dev && \
@@ -62,6 +60,7 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
+  dir: psp
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: /bin/sh
   args:
@@ -71,7 +70,7 @@ steps:
     export PATH=$$PATH:$$GOPATH/bin
     echo $$PATH
     go get -u gopkg.in/mikefarah/yq.v2
-    cd psp-env && \
+    cd psp/psp-env && \
     yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
     yq.v2 w -i values.yaml psp.image.tag ${SHORT_SHA}
 # This step pushes the manifest back to psp-env
@@ -82,7 +81,7 @@ steps:
   - '-c'
   - |
     set -x && \
-    cd psp-env && \
+    cd psp/psp-env && \
     git add values.yaml && \
     git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
     Built from commit ${COMMIT_SHA} of repository psp
