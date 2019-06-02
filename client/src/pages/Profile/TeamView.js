@@ -119,7 +119,7 @@ class TeamView extends Component {
             <Form>
               <Form.Field>
                 <label>User email</label>
-                <Input value={newteammember} placeholder={'someone@'+domain} 
+                <Input value={newteammember} placeholder={'someone'+domain} 
                   error={nerror!==null}
                   onChange={e=>{
                     const i=e.target.value.indexOf('@');
