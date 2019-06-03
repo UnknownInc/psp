@@ -6,7 +6,7 @@ import {
 } from 'awilix';
 const {scopePerRequest} = require('awilix-express');
 
-import config from '../config';
+import config from './config';
 import logger from './infra/logging/logger';
 import Database from './infra/database';
 import Cache from './infra/cache';
