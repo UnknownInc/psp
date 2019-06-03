@@ -7,7 +7,7 @@
     "node": ">=12.2.0"
   },
   "scripts": {
-    "start": "node lib/index.js",
+    "start": "NODE_ENV=production node lib/index.js",
     "build": "babel src -d lib",
     "babel-node": "babel-node",
     "test": "mocha --require @babel/register",
