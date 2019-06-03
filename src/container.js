@@ -35,8 +35,8 @@ container
       config: asValue(config),
     })
     .register({
-      router: asFunction(router).singleton(),
       logger: asFunction(logger).singleton(),
+      router: asFunction(router).singleton(),
     });
 
 // Database

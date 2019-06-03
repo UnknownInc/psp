@@ -7,7 +7,7 @@ module.exports = {
   },
   logging: {
     appenders: {
-      console: {type: 'console'},
+      console: {type: 'console', layout: {type: 'basic'}},
       file: {type: 'file', filename: logPath},
     },
     categories: {

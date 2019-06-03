@@ -66,7 +66,7 @@ class TeamList extends Component {
       {this.renderErrors()}
       {/*loggedInUserId===userid?<Popup trigger={<Button icon='plus' content='Add new team'/>}>Add a new team</Popup>:null*/}
       <div>
-        {teams.length===0?<Button onClick={this.loadTeams}>Load Teams</Button>:null}
+        {teams.length===0?<a onClick={this.loadTeams}>Show Teams ...</a>:null}
       </div>
       <Accordion panels={teams.map((t)=>{
         const {name, children=[]}=t;

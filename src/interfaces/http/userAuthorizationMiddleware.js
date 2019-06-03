@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
   return (req, res, next) => {
+    const log=logger('UA');
     // Express headers are auto converted to lowercase
     let token = req.headers['x-access-token'] || req.headers['authorization'];
     if (token && token.startsWith('Bearer ')) {
@@ -13,7 +14,7 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
     if (token) {
       jwt.verify(token, config.jwtsecret, (err, decoded) => {
         if (err) {
-          logger.error('Invalid token', err.message);
+          log.error('Invalid token', err.message);
           return res.sendStatus(403); // Token is not valid
         }
 
@@ -21,7 +22,7 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
         const email = req.user.email.toLowerCase();
         cache.get(email, async function(err, result) {
           if (err) {
-            logger.error('CACHE error retriving user by email from cache.',
+            log.error('CACHE error retriving user by email from cache.',
                 err);
           }
           if (!result) {
@@ -36,7 +37,7 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
               // set to expire after 1 hour
               cache.set(email, JSON.stringify(result), 'EX', 3600);
             } catch (ex) {
-              logger.error('userAuthorization error reading from db', ex);
+              log.error('userAuthorization error reading from db', ex);
               return res.sendStatus(401);
             }
           } else {
