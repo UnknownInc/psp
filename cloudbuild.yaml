@@ -72,7 +72,7 @@ steps:
     go get -u gopkg.in/mikefarah/yq.v2
     cd psp/psp-env && \
     yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
-    yq.v2 w -i values.yaml psp.image.tag ${SHORT_SHA}
+    yq.v2 w -i values.yaml psp.image.tag "${SHORT_SHA}"
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
