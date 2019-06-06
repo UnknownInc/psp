@@ -10,7 +10,9 @@ const methodOverride = require('method-override');
 // loggerMiddleware, errorHandler, swaggerMiddleware }) => {
 module.exports = ({config, logger, cache, database,
   containerMiddleware, loggerMiddleware,
-  userController, questionController, teamController}) => {
+  userController, questionController, teamController,
+  optionsController,
+}) => {
   const log=logger('Router');
   log.trace('setup');
   // eslint-disable-next-line new-cap
@@ -42,6 +44,7 @@ module.exports = ({config, logger, cache, database,
   apiRouter.use('/user', userController.router);
   apiRouter.use('/question', questionController.router);
   apiRouter.use('/team', teamController.router);
+  apiRouter.use('/options', optionsController.router);
 
   router.get('/ping', (req, res)=> res.send('pong'));
 

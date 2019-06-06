@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Header, Button, Message, Popup, Accordion, Label, Icon, Grid, GridColumn } from 'semantic-ui-react';
+import { Message, Accordion, Label, Icon} from 'semantic-ui-react';
 
 import { getProfile, getHeaders } from '../../config'
 import TeamView from './TeamView';
@@ -11,6 +11,7 @@ class TeamList extends Component {
       userid: this.props.user,
       loading: true
     }
+    this.loadTeams=this.loadTeams.bind(this);
   }
 
   async componentWillMount(){
@@ -19,7 +20,8 @@ class TeamList extends Component {
       const res= await getProfile();
       
       this.setState({loggedInUserId: res.profile._id});
-      if (this.props.preload) {
+
+      if (res.profile._id===this.props.user || this.props.preload){
         await this.loadTeams()
       }
     } catch (err) {
@@ -27,7 +29,8 @@ class TeamList extends Component {
     }
   }
 
-  loadTeams=async () => {
+  loadTeams=async (e) => {
+    if (e) {e.preventDefault();}
     this.setState({loading: true, errorHdr:null, errors:[]})
     try{
 
@@ -61,12 +64,12 @@ class TeamList extends Component {
   }
 
   render(){
-    const {teams=[], loggedInUserId, userid}= this.state;
+    const {teams=[], loggedInUserId}= this.state;
     return <div>
       {this.renderErrors()}
       {/*loggedInUserId===userid?<Popup trigger={<Button icon='plus' content='Add new team'/>}>Add a new team</Popup>:null*/}
       <div>
-        {teams.length===0?<a onClick={this.loadTeams}>Show Teams ...</a>:null}
+        {teams.length===0?<a href='#' onClick={this.loadTeams}>Show Teams ...</a>:null}
       </div>
       <Accordion panels={teams.map((t)=>{
         const {name, children=[]}=t;

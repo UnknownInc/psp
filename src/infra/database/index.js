@@ -36,6 +36,7 @@ export default class Database {
     this.Company = this.db.model('Company', require('../../schemas/company'));
     this.Node = this.db.model('Node', require('../../schemas/node'));
     this.Token = this.db.model('Token', require('../../schemas/token'));
+    this.Options = this.db.model('Options', require('../../schemas/options'));
   }
 
   /**

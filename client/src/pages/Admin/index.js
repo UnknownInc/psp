@@ -1,6 +1,5 @@
 import React from 'react';
 import loadable from '@loadable/component'
-import Spinner from "../../components/Spinner";
 import { Loader } from 'semantic-ui-react';
 
 const LoadingView = props => {

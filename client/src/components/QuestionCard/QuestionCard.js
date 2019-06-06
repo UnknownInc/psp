@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Spinner from '../Spinner'
 import { QUESTIONS_API, getHeaders } from '../../config'
 
 import './QuestionCard.css';

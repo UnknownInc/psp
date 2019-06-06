@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Form, Header, Icon, Button, Divider, Message, Modal, Comment, Loader, Input, Accordion, Grid } from 'semantic-ui-react';
+import { Form, Header, Icon, Button, Message, Modal, Comment, Loader, Input, Accordion, Grid } from 'semantic-ui-react';
 
 import { getHeaders, getProfile } from '../../config'
 import TeamList from './TeamList';
@@ -160,7 +160,6 @@ class TeamView extends Component {
         }
       }
     })
-    console.log(team.name+':'+team.user._id+':'+loggedInUserId)
     return <div>
       {loggedInUserId===team.user._id?<Header as={'h4'} >
         <span> {name===''?'\u226A Team 1 \u226B':name}&nbsp;&nbsp;</span>

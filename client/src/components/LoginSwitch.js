@@ -2,7 +2,7 @@ import React,{Component} from 'react'
 
 import {Loader} from 'semantic-ui-react';
 
-import {ACCOUNT_API, getHeaders, getProfile} from '../config';
+import {getProfile} from '../config';
 
 class LoginSwitch extends Component {
   state = {

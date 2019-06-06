@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import { notify } from 'react-notify-toast'
 import Spinner from '../components/Spinner'
-import { ACCOUNT_API, getHeaders, getProfile } from '../config'
+import { getProfile } from '../config'
 import Home from './Home'
-import { Dimmer, Form, Loader, Segment, Container } from 'semantic-ui-react';
+import { Form} from 'semantic-ui-react';
 import Page from '../components/Page';
 
 export default class Landing extends Component {
@@ -46,7 +46,7 @@ export default class Landing extends Component {
     event.preventDefault()
     this.setState({ sendingEmail: true})
     try{
-    const res = await fetch(`${ACCOUNT_API}/api/user/register`, {
+    const res = await fetch(`/api/user/register`, {
       method: 'POST',
       headers: {
         accept: 'application/json', 

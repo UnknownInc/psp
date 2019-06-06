@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 import { Redirect } from 'react-router-dom'
 import { notify } from 'react-notify-toast'
 import { ACCOUNT_API } from '../config'
-import { Dimmer, Form, Loader } from 'semantic-ui-react';
+import { Form } from 'semantic-ui-react';
 import Page from '../components/Page';
 
 export default class Confirm extends Component {

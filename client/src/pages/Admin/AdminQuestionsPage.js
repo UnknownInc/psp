@@ -6,7 +6,7 @@ import { notify } from 'react-notify-toast'
 
 import { QUESTIONS_API, getHeaders } from '../../config'
 import QuestionForm from './QuestionForm';
-import { Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab } from 'semantic-ui-react';
+import { Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Modal, FormButton, Tab } from 'semantic-ui-react';
 import Page from '../../components/Page';
 import ResponsiveButton from '../../components/ResponsiveButton';
 import QuestionSet from './QuestionSet';

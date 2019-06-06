@@ -21,7 +21,7 @@ module.exports = {
     to: data.to,
     subject: `Confirm Email - ${data.appName}`,
     html: `
-      <a href='${data.companyUrl}/verify/${data.token}'>
+      <a href='https://${data.companyUrl}/verify/${data.token}'>
         click to confirm email
       </a>
       <p>this emal is intended for recepient ${data.to}

@@ -7,43 +7,47 @@ import {
 const {scopePerRequest} = require('awilix-express');
 
 import config from './config';
-import logger from './infra/logging/logger';
-import Database from './infra/database';
-import Cache from './infra/cache';
 
 import Application from './app/Application';
 import Server from './interfaces/http/Server';
 import router from './interfaces/http/Router';
 
-import userAuthorization from './interfaces/http/userAuthorizationMiddleware';
-import loggerMiddleware from './interfaces/http/loggingMiddleware';
-import mailer from './infra/mailer';
 
 const container = createContainer();
 
 // System
 container
     .register({
-      app: asClass(Application).singleton(),
-      server: asClass(Server).singleton(),
-
-      loggerMiddleware: asFunction(loggerMiddleware).singleton(),
-      containerMiddleware: asValue(scopePerRequest(container)),
-      userAuthorizationMiddleware: asFunction(userAuthorization).singleton(),
-    })
-    .register({
       config: asValue(config),
     })
     .register({
-      logger: asFunction(logger).singleton(),
+      app: asClass(Application).singleton(),
+    })
+    .register({
+      server: asClass(Server).singleton(),
       router: asFunction(router).singleton(),
     });
 
-// Database
+import loggerMiddleware from './interfaces/http/loggingMiddleware';
+import userAuthorization from './interfaces/http/userAuthorizationMiddleware';
+// Middleware
 container
     .register({
-      database: asClass(Database).singleton(),
+      containerMiddleware: asValue(scopePerRequest(container)),
+      loggerMiddleware: asFunction(loggerMiddleware).singleton(),
+      userAuthorizationMiddleware: asFunction(userAuthorization).singleton(),
+    });
+
+import logger from './infra/logging/logger';
+import Cache from './infra/cache';
+import Database from './infra/database';
+import mailer from './infra/mailer';
+// infra
+container
+    .register({
+      logger: asFunction(logger).singleton(),
       cache: asClass(Cache).singleton(),
+      database: asClass(Database).singleton(),
       mailer: asFunction(mailer).singleton(),
     });
 
@@ -51,11 +55,13 @@ container
 import UserController from './controllers/UserController';
 import QuestionController from './controllers/QuestionController';
 import TeamController from './controllers/TeamController';
+import OptionsController from './controllers/OptionsController';
 container
     .register({
       userController: asClass(UserController),
       questionController: asClass(QuestionController),
       teamController: asClass(TeamController),
+      optionsController: asClass(OptionsController),
     });
 /*
 // with `loadModules`

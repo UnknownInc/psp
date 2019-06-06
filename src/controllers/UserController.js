@@ -57,7 +57,7 @@ export default class UserController {
    * @param {express.response} res response object
    * @return {any} nothing
    */
-  getUsers(req, res) {
+  async getUsers(req, res) {
     const user = req.user;
     if (!user) {
       return res.status(401).json({
@@ -67,6 +67,33 @@ export default class UserController {
 
     if (!user.isAdmin) {
       return res.sendStaus(403);
+    }
+
+    const User = this.database.User;
+    const query={};
+    try {
+      let offset = 0;
+      if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+      }
+      let limit = 0;
+      if (req.query.limit) {
+        limit = parseInt(req.query.limit);
+      }
+      const count = await User.find({query}).estimatedDocumentCount();
+      let mq = User.find(query);
+      if (req.query.sort) {
+        mq=mq.sort(req.query.sort);
+      }
+      const users = await mq.skip(offset).limit(limit);
+
+      const results=[];
+      users.forEach((u)=>results.push(u.toObject()));
+
+      res.set('X-Total-Count', ''+count);
+      return res.json(users);
+    } catch (err) {
+      this.logger.error(err);
     }
   }
 

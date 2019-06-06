@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 const {Router} = require('express');
 const mongoose = require('mongoose');
 
@@ -24,6 +25,8 @@ export default class QuestionController {
 
     this.getQuestion = this.getQuestion.bind(this);
     this.getQuestions = this.getQuestions.bind(this);
+    this.addQuestions = this.addQuestions.bind(this);
+    this.updateQuestions = this.updateQuestions.bind(this);
   }
 
   /**
@@ -34,6 +37,8 @@ export default class QuestionController {
     const router = Router();
     router.get('/', this.userAuthorizationMiddleware, this.getQuestions);
     router.get('/:id', this.userAuthorizationMiddleware, this.getQuestion);
+    router.put('/', this.userAuthorizationMiddleware, this.updateQuestions);
+    router.post('/', this.userAuthorizationMiddleware, this.addQuestions);
     return router;
   }
 
@@ -108,11 +113,105 @@ export default class QuestionController {
 
     try {
       // eslint-disable-next-line new-cap
-      const result = await Question.findOne({_id: ObjectId(req.params.id)})
+      const result = await Question.findOne({_id: ObjectId(req.params.id)});
       return res.json(result.toObject());
     } catch (err) {
       console.error(err);
       return res.status(500);
     }
+  }
+
+  /**
+   * updates question identified by the id
+   * @param {express.request} req request object
+   * @param {express.response} res response object
+   * @return {any} nothing
+   */
+  async updateQuestions(req, res) {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({
+        error: 'Not authorized',
+      });
+    }
+
+    const questions=req.body.questions||[];
+    // TODO: validate the questions
+    const Question = this.database.Question;
+
+    const bulk = Question.collection.initializeOrderedBulkOp();
+    questions.forEach((q)=>{
+      bulk.find({'_id': ObjectId(q._id)}).updateOne({$set: {
+        question: q.question,
+        category: q.category,
+        tags: q.tags,
+        options: q.options,
+        modifiedBy: user.email,
+        modifiedAt: Date.now,
+        targetlevels: q.targetlevels||'all',
+        targetmintenure: q.targetmintenure||0,
+      }});
+    });
+    bulk.execute((error)=>{
+      if (error) {
+        this.logger.error(error);
+        return res.sendStatus(500);
+      }
+      return res.sendStatus(200);
+    });
+  }
+
+
+  /**
+   * adds new questions
+   * @param {express.request} req request object
+   * @param {express.response} res response object
+   * @return {any} nothing
+   */
+  async addQuestions(req, res) {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({
+        error: 'Not authorized',
+      });
+    }
+
+    const newQuestions=[];
+    req.body.questions.forEach((q) => {
+      newQuestions.push({
+        question: q.question,
+        category: q.category,
+        tags: q.tags,
+        options: q.options,
+        createdBy: user.email,
+        modifiedBy: user.email,
+        targetlevels: q.targetlevels||'all',
+        targetmintenure: q.targetmintenure||0,
+      });
+    });
+
+    // TODO: validate the questions
+    const Question = this.database.Question;
+
+    Question.insertMany(newQuestions)
+        .then((qlist)=>{
+          return res.status(200).json(qlist);
+        })
+        .catch((err)=>{
+          this.logger.error(err);
+          return res.status(500);
+        });
   }
 }
