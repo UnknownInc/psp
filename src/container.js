@@ -4,11 +4,9 @@ import {
   asFunction,
   asValue,
 } from 'awilix';
-// const {scopePerRequest} = require('awilix-express');
+const {scopePerRequest} = require('awilix-express');
 
-import config from '../config';
-import logger from './infra/logging/logger';
-import Database from './infra/database';
+import config from './config';
 
 import Application from './app/Application';
 import Server from './interfaces/http/Server';
@@ -20,23 +18,61 @@ const container = createContainer();
 // System
 container
     .register({
-      app: asClass(Application).singleton(),
-      server: asClass(Server).singleton(),
-    })
-    .register({
       config: asValue(config),
     })
     .register({
+      app: asClass(Application).singleton(),
+    })
+    .register({
+      server: asClass(Server).singleton(),
       router: asFunction(router).singleton(),
-      logger: asFunction(logger).singleton(),
     });
 
-// Database
+import loggerMiddleware from './interfaces/http/loggingMiddleware';
+import userAuthorization from './interfaces/http/userAuthorizationMiddleware';
+// Middleware
 container
     .register({
-      database: asClass(Database).singleton(),
+      containerMiddleware: asValue(scopePerRequest(container)),
+      loggerMiddleware: asFunction(loggerMiddleware).singleton(),
+      userAuthorizationMiddleware: asFunction(userAuthorization).singleton(),
     });
 
+import logger from './infra/logging/logger';
+import Cache from './infra/cache';
+import Database from './infra/database';
+import mailer from './infra/mailer';
+// infra
+container
+    .register({
+      logger: asFunction(logger).singleton(),
+      cache: asClass(Cache).singleton(),
+      database: asClass(Database).singleton(),
+      mailer: asFunction(mailer).singleton(),
+    });
+
+
+import UserController from './controllers/UserController';
+import QuestionController from './controllers/QuestionController';
+import TeamController from './controllers/TeamController';
+import OptionsController from './controllers/OptionsController';
+container
+    .register({
+      userController: asClass(UserController),
+      questionController: asClass(QuestionController),
+      teamController: asClass(TeamController),
+      optionsController: asClass(OptionsController),
+    });
+/*
+// with `loadModules`
+container.loadModules([
+  [
+    'controllers/*.js',
+  ],
+], {
+  formatName: 'camelCase',
+});
+*/
 // Load our modules!
 // container.loadModules([
 //   // Globs!

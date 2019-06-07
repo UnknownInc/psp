@@ -9,9 +9,9 @@ export default class Server {
    * @param {object} param0
    */
   constructor({config, router, logger}) {
-    logger.trace('Server.constructor');
+    this.logger = logger('Server');
+    this.logger.trace('constructor');
     this.config = config;
-    this.logger = logger;
     this.express = express();
 
     this.express.disable('x-powered-by');
@@ -23,7 +23,7 @@ export default class Server {
    * @return {promise} promise that resolves when the server starts
    */
   start() {
-    this.logger.trace('Server.start');
+    this.logger.trace('start');
     return new Promise((resolve) => {
       const http = this.express
           .listen(this.config.web.port, () => {
