@@ -177,7 +177,7 @@ export default class UserController {
     this.logger.trace('register');
     const email = (req.body.email||'').trim().toLowerCase();
     const payload = getEmailParts(email);
-    const companyUrl = `${req.protocol}://${req.get('host')}`;
+    const companyUrl = `${req.get('host')}`;
 
     this.logger.debug('register payload', payload);
     if (!payload.isValid || payload.company==='') {

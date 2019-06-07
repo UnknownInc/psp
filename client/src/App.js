@@ -10,7 +10,7 @@ import Admin,{AdminQuestions, AdminUsers, AdminSettings} from './pages/Admin'
 import ProfilePage from './pages/Profile';
 import ReportsPage from './pages/Reports';
 import './App.css';
-import { Menu, Icon, Dropdown } from 'semantic-ui-react';
+import { Menu, Icon, Dropdown, Image } from 'semantic-ui-react';
 import LoginSwitch from './components/LoginSwitch';
 import { isNullOrUndefined } from 'util';
 
@@ -70,8 +70,8 @@ class App extends Component {
           <div>
             <Menu pointing secondary fixed='top' color='blue' inverted>
               <Menu.Menu>
-                <Menu.Item>
-                  <Link to='/'><Icon name='bars'/></Link>
+                <Menu.Item style={{padding:6}}>
+                  <Link to='/'><Image src="/favicon-96x96.png" width="32px"/></Link>
                 </Menu.Item>
               </Menu.Menu>
 
