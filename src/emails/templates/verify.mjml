@@ -1,0 +1,48 @@
+<mjml>
+  <mj-head>
+    <mj-title>Discount Light</mj-title>
+    <mj-preview>Pre-header Text</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"></mj-all>
+      <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"></mj-text>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .body-section { -webkit-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); -moz-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); }
+    </mj-style>
+    <mj-style inline="inline">
+      .text-link { color: #5e6ebf }
+    </mj-style>
+    <mj-style inline="inline">
+      .footer-link { color: #888888 }
+    </mj-style>
+
+  </mj-head>
+  <mj-body background-color="#E7E7E7" width="600px">
+    <mj-section full-width="full-width" background-color="#079FFF" padding-bottom="0">
+      <mj-column width="100%">
+        <mj-image src="https://${this.companyUrl}/logo.png" width="128px"/>
+      </mj-column>
+      <mj-column background-color="#fff" width="100%" padding-top="40px">
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+        <mj-column width="100%">
+            <mj-text align="center" >
+                <span style="font-weight:bold">Just one more thing to do:</span> 
+                click the big confirm button to start using the ${this.appname} application from this device.
+                <br/>
+                <br/>
+            </mj-text>
+            
+            <mj-button background-color="#079FFF" align="center" color="#fff" font-size="17px" font-weight="bold" 
+                href="https://${this.companyUrl}/verify/${this.token}" width="300px">
+                Confirm email
+            </mj-button>
+          <mj-divider border-color="#DFE3E8" border-width="1px" />
+          <mj-text color="#445566" font-size="11px" align="center" line-height="16px">
+            You are receiving this email because you registered with ${this.appname}.
+          </mj-text>
+        </mj-column>
+    </mj-section>
+  </mj-body>
+  </mjml>
