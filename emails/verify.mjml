@@ -29,7 +29,7 @@
         <mj-column width="100%">
             <mj-text align="center" >
                 <span style="font-weight:bold">Just one more thing to do:</span> 
-                click the big confirm button to start using the ${this.appname} application from this device.
+                click the big confirm button to start using the ${this.appName} application from this device.
                 <br/>
                 <br/>
             </mj-text>
@@ -40,7 +40,7 @@
             </mj-button>
           <mj-divider border-color="#DFE3E8" border-width="1px" />
           <mj-text color="#445566" font-size="11px" align="center" line-height="16px">
-            You are receiving this email because you registered with ${this.appname}.
+            You are receiving this email because you registered with ${this.appName}.
           </mj-text>
         </mj-column>
     </mj-section>

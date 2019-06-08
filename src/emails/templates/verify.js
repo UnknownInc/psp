@@ -3,6 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import mjml2html from 'mjml';
 
+const fillTemplate = function(templateString, templateVars) {
+  return new Function('return `'+templateString +'`;').call(templateVars);
+};
 /*
   from - The email address of the sender. All email addresses can be plain
    ‘sender@server.com’ or formatted ’“Sender Name” sender@server.com‘, see
@@ -23,9 +26,6 @@ import mjml2html from 'mjml';
 module.exports = {
   confirm: (data) => {
     const mjml = mjml2html(fs.readFileSync('./emails/verify.mjml', 'utf-8'));
-    const fillTemplate = function(templateString, templateVars) {
-      return new Function('return `'+templateString +'`;').call(templateVars);
-    };
     return {
       to: data.to,
       subject: `Confirm Email - ${data.appName}`,
@@ -34,7 +34,7 @@ module.exports = {
       //     click to confirm email
       //   </a>
       //   <p>this emal is intended for recepient ${data.to}
-      html: fillTemplate(mjml, data),
+      html: fillTemplate(mjml.html, data),
       text: `Copy and paste this link: ${data.companyUrl}/verify/${data.token}`,
     };
   },

@@ -2,6 +2,7 @@ import container from './container';
 
 const app = container.resolve('app');
 
+
 app
     .start()
     .catch((error) => {
