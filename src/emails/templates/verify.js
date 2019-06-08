@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import fs from 'fs';
+import path from 'path';
 import mjml2html from 'mjml';
 
 /*
@@ -21,7 +22,7 @@ import mjml2html from 'mjml';
 */
 module.exports = {
   confirm: (data) => {
-    const mjml = mjml2html(fs.readFileSync('./verify.mjml', 'utf-8'));
+    const mjml = mjml2html(fs.readFileSync(path.join(__dirname, './verify.mjml'), 'utf-8'));
     const fillTemplate = function(templateString, templateVars) {
       return new Function('return `'+templateString +'`;').call(templateVars);
     };
