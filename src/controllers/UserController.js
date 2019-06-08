@@ -226,7 +226,7 @@ export default class UserController {
         to: payload.address,
         token: token.token,
         companyUrl: companyUrl,
-        appName: 'psp',
+        appName: process.env['K_SERVICE'],
       };
       const emailContent = require('../emails/templates/verify').confirm(data);
       emailContent.from=process.env.MAIL_FROM;
