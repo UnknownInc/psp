@@ -54,6 +54,7 @@ container
 
 import UserController from './controllers/UserController';
 import QuestionController from './controllers/QuestionController';
+import QuestionSetController from './controllers/QuestionSetController';
 import TeamController from './controllers/TeamController';
 import OptionsController from './controllers/OptionsController';
 container
@@ -62,6 +63,7 @@ container
       questionController: asClass(QuestionController),
       teamController: asClass(TeamController),
       optionsController: asClass(OptionsController),
+      questionSetController: asClass(QuestionSetController),
     });
 /*
 // with `loadModules`

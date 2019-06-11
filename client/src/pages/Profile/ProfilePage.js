@@ -50,7 +50,7 @@ class ProfilePage extends Component {
         name: profile.name
       }
       const response = await fetch(`/api/user/${profile._id}`, {
-          method: 'post',
+          method: 'PUT',
           headers,
           body: JSON.stringify(body)
         });

@@ -11,7 +11,7 @@ const methodOverride = require('method-override');
 module.exports = ({config, logger, cache, database,
   containerMiddleware, loggerMiddleware,
   userController, questionController, teamController,
-  optionsController,
+  optionsController, questionSetController,
 }) => {
   const log=logger('Router');
   log.trace('setup');
@@ -43,6 +43,7 @@ module.exports = ({config, logger, cache, database,
 
   apiRouter.use('/user', userController.router);
   apiRouter.use('/question', questionController.router);
+  apiRouter.use('/questionset', questionSetController.router);
   apiRouter.use('/team', teamController.router);
   apiRouter.use('/options', optionsController.router);
 

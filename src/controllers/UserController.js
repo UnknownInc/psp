@@ -43,7 +43,7 @@ export default class UserController {
     router.post('/register', this.register);
     router.post('/verify', this.verify);
     router.get('/:id', this.userAuthorizationMiddleware, this.getUser);
-    router.post('/:id', this.userAuthorizationMiddleware, this.updateUser);
+    router.put('/:id', this.userAuthorizationMiddleware, this.updateUser);
     // router.post('/', inject('createUser'), this.create);
     // router.put('/:id', inject('updateUser'), this.update);
     // router.delete('/:id', inject('deleteUser'), this.delete);

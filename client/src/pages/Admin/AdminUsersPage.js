@@ -238,7 +238,7 @@ class AdminUsersPage extends Component {
                   <Menu.Item as='a' icon disabled={currentPage===1}>
                     <Icon name='chevron left' />
                   </Menu.Item>
-                  {pages.map(i=><Menu.Item as='a' onClick={e=>{
+                  {pages.map(i=><Menu.Item as='a' active={currentPage===i} onClick={e=>{
                     const pageNumber=i;
                     this.loadPage(pageNumber);
                   }} >{i}</Menu.Item>)}

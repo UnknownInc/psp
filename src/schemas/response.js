@@ -4,10 +4,9 @@ const ObjectId = Schema.Types.ObjectId;
 
 // Data we need to collect/confirm to have the app go.
 const fields = {
-  email: {type: String, index: true, lowercase: true, trim: true},
+  user: {type: ObjectId, ref: 'User'},
   question: {type: ObjectId},
   date: {type: Date, index: true},
-  manager: {type: String, index: true, lowercase: true, trim: true},
   response: {type: String, lowercase: true, trim: true},
 };
 

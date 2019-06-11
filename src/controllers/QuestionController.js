@@ -64,13 +64,26 @@ export default class QuestionController {
     const Question = this.database.Question;
     // TODO: validate the questions query parameters
     const query={};
-
     try {
-      const results = await Question.find(query);
+      let offset = 0;
+      if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+      }
+      let limit = 0;
+      if (req.query.limit) {
+        limit = parseInt(req.query.limit);
+      }
+      const count = await Question.find({query}).estimatedDocumentCount();
+      let mq = Question.find(query);
+      if (req.query.sort) {
+        mq=mq.sort(req.query.sort);
+      }
+      const results = await mq.skip(offset).limit(limit);
       const questions=[];
       results.forEach((q) => {
         questions.push(q.toObject());
       });
+      res.set('X-Total-Count', ''+count);
       return res.json(questions);
     } catch (err) {
       console.error(err);
