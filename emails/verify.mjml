@@ -34,15 +34,28 @@
                 <br/>
                 <br/>
             </mj-text>
-            
+
+            <mj-divider border-color="#DFE3E8" border-width="1px" />
+
+            <mj-text align='center'>
+                <br/>
+                CODE: <span style="font-weight:bold">${this.token}</span> 
+                <br/>
+            </mj-text>
+
+            <mj-divider border-color="#DFE3E8" border-width="1px" />
+
+            <mj-text align='center'>Click here if you registered on the browser</mj-text>
             <mj-button background-color="#079FFF" align="center" color="#fff" font-size="17px" font-weight="bold" 
                 href="https://${this.companyUrl}/verify/${this.token}" width="300px">
                 Confirm email
             </mj-button>
-          <mj-divider border-color="#DFE3E8" border-width="1px" />
-          <mj-text color="#445566" font-size="11px" align="center" line-height="16px">
-            You are receiving this email because you registered with ${this.appName}.
-          </mj-text>
+
+            <mj-divider border-color="#DFE3E8" border-width="1px" />
+
+            <mj-text color="#445566" font-size="11px" align="center" line-height="16px">
+                You are receiving this email because you registered with ${this.appName}.
+            </mj-text>
         </mj-column>
     </mj-section>
   </mj-body>

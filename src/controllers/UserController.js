@@ -230,7 +230,11 @@ export default class UserController {
       };
       const emailContent = require('../emails/templates/verify').confirm(data);
       emailContent.from=process.env.MAIL_FROM;
-      await this.mailer.sendMail(emailContent);
+      if (process.env.SKIP_EMAIL) {
+        this.logger.trace(data);
+      } else {
+        await this.mailer.sendMail(emailContent);
+      }
       return res.json({
         message: `Thanks for registering. Please verify as per the instructions sent to ${payload.address}`,
       });

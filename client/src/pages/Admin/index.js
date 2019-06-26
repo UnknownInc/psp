@@ -21,15 +21,12 @@ const AdminUsersPage = loadable(() => import('./AdminUsersPage'), {
   fallback: LoadingView,
 })
 
-export function AdminSettings(){
-  return <AdminSettingsPage />
-}
-export function AdminQuestions(){
-  return <AdminQuestionsPage />
-}
-export function AdminUsers(){
-  return <AdminUsersPage />
-}
-export default function Admin() {
-  return <AdminPage />
-}
+export const AdminSettings = AdminSettingsPage
+
+export const  AdminQuestions = AdminQuestionsPage
+
+export const  AdminUsers = AdminUsersPage 
+
+const Admin = AdminPage
+
+export default Admin

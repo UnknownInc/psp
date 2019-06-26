@@ -10,8 +10,11 @@ const fields = {
   tags: [String],
   title: {type: String},
   careerStage: {type: String},
+  capability: {type: String},
+  primarySkill: {type: String},
+  skills: [{type: String}],
   clients: [{type: String}],
-  industry: [{type: String}],
+  industry: {type: String},
   details: {type: Object},
   company: {type: ObjectId, ref: 'Company'},
   isVerified: {type: Boolean, default: false},
@@ -50,6 +53,11 @@ class UserClass {
   }
 }
 userSchema.index({email: 1}, {unique: true});
+userSchema.index({tags: 1});
+userSchema.index({title: 1});
+userSchema.index({capability: 1});
+userSchema.index({industry: 1});
+userSchema.index({clients: 1});
 userSchema.loadClass(UserClass);
 
 module.exports = userSchema;

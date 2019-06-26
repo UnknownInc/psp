@@ -3,6 +3,7 @@ import { QUESTIONS_API, getHeaders } from '../../config'
 
 import './QuestionCard.css';
 import { Loader } from 'semantic-ui-react';
+import moment from 'moment';
 
 export default class QuestionCard extends Component {
   state ={
@@ -29,10 +30,13 @@ export default class QuestionCard extends Component {
         return
       }
 
-      const q = await response.json() 
-      
-      if (q._id) {
-        this.setState({loading: false, query: q})
+      const qs = await response.json() 
+     
+      const lid = window.localStorage.getItem('lastResponseQs'); 
+
+      //window.localStorage.setItem('lastResponseDate',moment().utc().startOf('day').format('YYYY-MM-DD'));
+      if (qs._id && lid!==qs._id) {
+        this.setState({loading: false, query: qs.questions[0], qs})
       } else {
         this.setState({loading: false, submitted: true})
       }
@@ -42,18 +46,39 @@ export default class QuestionCard extends Component {
     }
   }
 
-  submitAnswer = (option)=>{
+  submitAnswer = async (option)=>{
     this.setState({submiting: true});
 
-    setTimeout(()=>{
+    try {
+      const headers=getHeaders();
+      headers["Content-type"] = "application/json";
+      const response = await fetch(`/api/question/submit`, {
+        headers,
+        method: 'POST',
+        body:JSON.stringify({
+          questionSet:this.state.qs._id,
+          question:this.state.query._id,
+          response: option
+        })
+      })
+
+      if (!response.ok) {
+        this.setState({submitted: false, submiting: false})
+        return 
+      }
+      window.localStorage.setItem('lastResponseDate',moment().utc().startOf('day').format('YYYY-MM-DD'));
+      window.localStorage.setItem('lastResponseQs', this.state.qs._id);
+
       this.setState({submitted: true, submiting: false})
-    }, 2000);
+    } catch (err) {
+      this.setState({submitted: false, submiting: false})
+    }
   }
 
   handleIDWA = event => {
     event.preventDefault()
 
-    this.submitAnswer()
+    this.submitAnswer('IDWA')
   }
   
   handleFormSubmit = event => {

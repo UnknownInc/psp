@@ -2,10 +2,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
 
+const questionSchema = require('./question');
+
 // Data we need to collect/confirm to have the app go.
 const fields = {
   name: {type: String},
-  questions: [{type: ObjectId, ref: 'Question'}],
+  questions: [questionSchema],
   company: {type: String, lowercase: true},
   date: {type: Schema.Types.Date},
   selector: [String],

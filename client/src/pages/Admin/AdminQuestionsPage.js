@@ -6,10 +6,18 @@ import { notify } from 'react-notify-toast'
 
 import { QUESTIONS_API, getHeaders } from '../../config'
 import QuestionForm from './QuestionForm';
-import { Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Modal, FormButton, Tab, Menu, Input, Dropdown } from 'semantic-ui-react';
+import { Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Modal, FormButton, Tab, Menu, Input, Dropdown, Accordion } from 'semantic-ui-react';
 import Page from '../../components/Page';
 import ResponsiveButton from '../../components/ResponsiveButton';
-import QuestionSet from './QuestionSet';
+import QuestionSetForm from './QuestionSetForm';
+import moment from 'moment';
+
+// import DatePicker from "react-datepicker";
+ 
+// import "react-datepicker/dist/react-datepicker.css";
+
+import QuestionSet from '../../domain/QuestionSet';
+
 /*
 const get = (obj, path, defaultValue) => path.split(".")
 .reduce((a, c) => (a && a[c] ? a[c] : (defaultValue || null)), obj)
@@ -41,7 +49,7 @@ class AdminQuestionsPage extends Component {
       openUploadModal: false,
       openNewSetModal:false,
       loading: true,
-      questionSetList:[],
+      questionSetList:[{key:'default', text:'default', value:'default'}],
       items:[],
       deletedItems:[],
       filePreview:"",
@@ -49,10 +57,10 @@ class AdminQuestionsPage extends Component {
       isNotAuthorized: true,
       allSelected: false,
       offset:0,
-      limit:25,
+      limit:125,
       totalUsersCount: 0,
       sortColumn:'question',
-      sortDirection:1,
+      sortDirection:'ascending',
     }
   }
 
@@ -63,16 +71,14 @@ class AdminQuestionsPage extends Component {
 
   loadQuestionSets = async ()=>{
     try {
-      const headers = getHeaders();
-      const res = await fetch('/api/questionset/distinct',{headers});
-      if (!res.ok) {
-        throw new Error(res.statusText);
+      const questionSetList=[]; 
+      const qsnames = await QuestionSet.getAvailableSets();
+      for(let i=0;i<qsnames.length;i++){
+        questionSetList.push({key: qsnames[i], text: qsnames[i], value: qsnames[i]});
       }
-      const questionSetList = await res.json();
       if (questionSetList.length===0) {
-        questionSetList.push('default');
+        questionSetList.push({key:'default', text:'default', value:'default'});
       }
-      console.log(questionSetList);
       this.setState({questionSetList});
     } catch (err) {
       console.error(err);
@@ -90,7 +96,7 @@ class AdminQuestionsPage extends Component {
     const headers= getHeaders();
     
     try{
-      const res = await fetch(`/api/question?${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection===-1?'-':''}${this.state.sortColumn}`, { headers});
+      const res = await fetch(`/api/question?${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`, { headers});
 
       if (!res.ok) {
         return this.setState({loading: false, error:{header:res.statusText}, isNotAuthorized: false})
@@ -104,6 +110,40 @@ class AdminQuestionsPage extends Component {
       const error={header:'Unable to load users.'}
       error.errors=[ JSON.stringify(err)];
       this.setState({loading: false, error})
+    }
+  }
+
+  addQuestionsToSet = async ()=>{
+    const {questionSet, items} = this.state;
+    try{
+      this.setState({addingToSet: true, addToQuestionSetError: null})
+      const headers = getHeaders();
+      const body={
+        name: questionSet,
+        questions:[]
+      }
+      
+      for (let i=0;i<items.length;++i) {
+        if (items[i].isSelected) {
+          body.questions.push(items[i]._id);
+        }
+      }
+      headers["Content-type"] = "application/json";
+      const res = await fetch('/api/questionset/', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        throw new Error(res.statusText);
+      }
+
+      const qs=await res.json();
+      notify(`Sucessfully added ${qs.questions.length} question to ${qs.name}`);
+      this.setState({addingToSet: false, addToQuestionSetError: null, openAddToQuestionSetModal: false})
+    } catch (err) {
+      this.setState({addingToSet: false, addToQuestionSetError:'Unable to add questions to the set' })
     }
   }
 
@@ -123,12 +163,12 @@ class AdminQuestionsPage extends Component {
     if (sortColumn !== clickedColumn) {
       this.setState({
         sortColumn: clickedColumn,
-        sortDirection: 1,
+        sortDirection: 'ascending',
       },async ()=> await this.loadQuestions());
       return
     }
     this.setState({
-      sortDirection: sortDirection === 1 ? -1 : 1,
+      sortDirection: sortDirection === 'ascending' ? 'descending' : 'ascending',
     }, async () => await this.loadQuestions());
   }
 
@@ -376,7 +416,7 @@ class AdminQuestionsPage extends Component {
                 <Menu.Item as='a' icon disabled={currentPage===1}>
                   <Icon name='chevron left' />
                 </Menu.Item>
-                {pages.map(i=><Menu.Item as='a' 
+                {pages.map(i=><Menu.Item key={i} as='a' 
                   active={currentPage===i}
                   onClick={e=>{
                     const pageNumber=i;
@@ -394,8 +434,55 @@ class AdminQuestionsPage extends Component {
     </div>)
   }
 
-  renderFilterPanel(){
+  renderQSFilterPanel(){
     return <Segment basic>
+      <Accordion panels={[
+        { 
+          key: 'filterpane',
+          title: {
+            content:<span><Icon name='filter'/> Filter Options</span>
+          },
+          content:{
+            content:
+            <Form onSubmit={this.loadUsers}>
+              <Form.Group widths='equal'>
+                <Form.Field control={Input} label='Question' placeholder='Are*' value={this.state.questionFilter} 
+                  onChange={e=>this.setState({questionFilter: e.target.value})}/>
+                <Form.Field control={Input} label='Category' placeholder='rak*' value={this.state.categoryFilter} 
+                  onChange={e=>this.setState({categoryFilter: e.target.value})}/>
+                {/* <Form.Field control={Select} label='Gender' options={options} placeholder='Gender' /> */}
+              </Form.Group>
+              <Form.Field control={Button}>Refresh</Form.Field>
+            </Form>
+          }
+        }
+      ]}/>
+    </Segment>
+  }
+
+  renderQFilterPanel(){
+    return <Segment basic>
+      <Accordion panels={[
+        { 
+          key: 'filterpane',
+          title: {
+            content:<span><Icon name='filter'/> Filter Options</span>
+          },
+          content:{
+            content:
+            <Form onSubmit={this.loadQuestions}>
+              <Form.Group widths='equal'>
+                <Form.Field control={Input} label='Question' placeholder='Are*' value={this.state.questionFilter} 
+                  onChange={e=>this.setState({questionFilter: e.target.value})}/>
+                <Form.Field control={Input} label='Category' placeholder='rak*' value={this.state.categoryFilter} 
+                  onChange={e=>this.setState({categoryFilter: e.target.value})}/>
+                {/* <Form.Field control={Select} label='Gender' options={options} placeholder='Gender' /> */}
+              </Form.Group>
+              <Form.Field control={Button}>Refresh</Form.Field>
+            </Form>
+          }
+        }
+      ]}/>
     </Segment>
   }
 
@@ -408,7 +495,7 @@ class AdminQuestionsPage extends Component {
   renderQuestionBank(){
     return <Segment basic>
       <Header as='h2'>Question Bank</Header>
-      {this.renderFilterPanel()}
+      {this.renderQFilterPanel()}
       <Divider/>
       {this.renderGrid()}
       {this.renderEditModal()}
@@ -427,10 +514,16 @@ class AdminQuestionsPage extends Component {
       <Segment basic>
         <Tab panes={[
           { menuItem: 'Question Bank', render: () => <Tab.Pane>{this.renderQuestionBank()}</Tab.Pane> },
-          { menuItem: 'Question Sets', render: () => <Tab.Pane>{<QuestionSet/>}</Tab.Pane> },
+          { menuItem: 'Question Sets', render: () => <Tab.Pane>{<QuestionSetForm filterbar/>}</Tab.Pane> },
         ]}/>
       </Segment>
     </Page>
+  }
+
+  isWeekday=(d)=>{
+    const day = moment(d).day();
+
+    return (day!==0 && day!==6)
   }
 
   renderAddToQuestionSetModal() {
@@ -451,13 +544,16 @@ class AdminQuestionsPage extends Component {
               fluid
               selection
               options={this.state.questionSetList}
+              value={this.state.questionSet}
+              onChange={(e,{value})=> this.setState({questionSet: value})}
             />
           </Form.Group>
           <h4>Adding {selectedCount} questions to the set</h4>
         </Form>
       </Modal.Content>
       <Modal.Actions>
-
+        <Button color='green' onClick={this.addQuestionsToSet}>Update</Button>
+        <Button onClick={this.onCloseAddToQuestionSetModal}>Cancel</Button>
       </Modal.Actions>
     </Modal>
   }

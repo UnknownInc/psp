@@ -6,6 +6,7 @@ import { Container, Form, Header, Segment, Icon, Divider, Message, Tab } from 's
 import {getHeaders, getProfile } from '../../config';
 import { isNullOrUndefined } from 'util';
 import TeamList from './TeamList';
+import OptionsDropdown from '../../components/OptionsDropdown';
 
 class ProfilePage extends Component {
   constructor(props) {
@@ -92,6 +93,14 @@ class ProfilePage extends Component {
         <label>Name</label>
         <Form.Input value={this.state.profile.name} name="name" onChange={this.handleChange}/>
       </Form.Field>
+      <Form.Field>
+        <label>Capability</label>
+      </Form.Field>
+        <OptionsDropdown opname='capability' value={this.state.profile.capability} onChange={this.handleChange} 
+          placeholder='Choose Capability'
+          search
+          selection
+          fluid/>
       <Divider/>
       <Form.Group>
         <Form.Button color='blue' onClick={this.handleUpdateProfile}>Update</Form.Button>

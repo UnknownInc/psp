@@ -35,10 +35,11 @@ export default class OptionsController {
   get router() {
     // eslint-disable-next-line new-cap
     const router = Router();
-    router.get('/', this.userAuthorizationMiddleware, this.getOptions);
-    router.get('/:id', this.userAuthorizationMiddleware, this.getOption);
-    router.put('/:id', this.userAuthorizationMiddleware, this.updateOptions);
-    router.post('/', this.userAuthorizationMiddleware, this.addOption);
+    router.use(this.userAuthorizationMiddleware);
+    router.get('/', this.getOptions);
+    router.get('/:id', this.getOption);
+    router.put('/:id', this.updateOptions);
+    router.post('/', this.addOption);
     return router;
   }
 
@@ -58,7 +59,12 @@ export default class OptionsController {
     }
 
     try {
-      const query={_id: ObjectId(req.params.id)};
+      const query={};
+      if (ObjectId.isValid(req.params.id)) {
+        query._id=ObjectId(req.params.id);
+      } else {
+        query.name=new RegExp(req.params.id, 'i');
+      }
       const Options = this.database.Options;
       const op = await Options.findOne(query);
       if (!op) {
@@ -87,20 +93,18 @@ export default class OptionsController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!user.isAdmin && !req.query.onlynames) {
       return res.sendStaus(403);
     }
 
     const Options = this.database.Options;
-    const query={};
-    if (req.query.name) {
-      query.name=req.query.name;
-    }
-    if (req.query.namex) {
-      query.name=RegExp(req.query.namex, 'i');
-    }
+    const query = {};
     try {
-      const op = await Options.find(query);
+      const projection = {name: 1};
+      if (!req.query.onlynames) {
+        projection.options=1;
+      }
+      const op = await Options.find(query, projection);
       const results=[];
       op.forEach((op) => results.push(op.toObject()) );
       return res.json(results);

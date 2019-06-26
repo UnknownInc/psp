@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import { BrowserRouter, Route, Redirect, Switch, Link } from 'react-router-dom'
 import Notifications from 'react-notify-toast'
+import { DndProvider } from 'react-dnd'
+import HTML5Backend from 'react-dnd-html5-backend'
 
 
 import Spinner from './components/Spinner'
@@ -106,6 +108,7 @@ class App extends Component {
     }
 
     return (
+
       // The 'container' class uses flexbox to position and center its three 
       // children: <Notifications />, <main> and <Footer /> 
       <div className='container fadein'>
@@ -116,7 +119,9 @@ class App extends Component {
         */}
         <Notifications />
         <main>
-          {content()}
+          <DndProvider backend={HTML5Backend}>
+            {content()}
+          </DndProvider>
         </main>
         {/* <Footer/> */}
       </div>
