@@ -43,7 +43,7 @@ export default class UserController {
     router.post('/register', this.register);
     router.post('/verify', this.verify);
     router.get('/:id', this.userAuthorizationMiddleware, this.getUser);
-    router.post('/:id', this.userAuthorizationMiddleware, this.updateUser);
+    router.put('/:id', this.userAuthorizationMiddleware, this.updateUser);
     // router.post('/', inject('createUser'), this.create);
     // router.put('/:id', inject('updateUser'), this.update);
     // router.delete('/:id', inject('deleteUser'), this.delete);
@@ -177,7 +177,7 @@ export default class UserController {
     this.logger.trace('register');
     const email = (req.body.email||'').trim().toLowerCase();
     const payload = getEmailParts(email);
-    const companyUrl = `${req.protocol}://${req.get('host')}`;
+    const companyUrl = `${req.get('host')}`;
 
     this.logger.debug('register payload', payload);
     if (!payload.isValid || payload.company==='') {
@@ -226,11 +226,15 @@ export default class UserController {
         to: payload.address,
         token: token.token,
         companyUrl: companyUrl,
-        appName: 'psp',
+        appName: process.env['K_SERVICE'],
       };
       const emailContent = require('../emails/templates/verify').confirm(data);
       emailContent.from=process.env.MAIL_FROM;
-      await this.mailer.sendMail(emailContent);
+      if (process.env.SKIP_EMAIL) {
+        this.logger.trace(data);
+      } else {
+        await this.mailer.sendMail(emailContent);
+      }
       return res.json({
         message: `Thanks for registering. Please verify as per the instructions sent to ${payload.address}`,
       });

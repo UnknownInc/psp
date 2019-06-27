@@ -1,10 +1,17 @@
 /* eslint-disable new-cap */
+import moment from 'moment';
 const {Router} = require('express');
 const mongoose = require('mongoose');
 
 const ObjectId = mongoose.Types.ObjectId;
 
 
+function IsNullOrEmpty(str) {
+  if (str===null) return true;
+  if (str===undefined) return true;
+  if (str==='') return true;
+  return false;
+}
 /**
  * Controller class to handle all user related api's
  * /user/...
@@ -27,6 +34,7 @@ export default class QuestionController {
     this.getQuestions = this.getQuestions.bind(this);
     this.addQuestions = this.addQuestions.bind(this);
     this.updateQuestions = this.updateQuestions.bind(this);
+    this.submitResponse = this.submitResponse.bind(this);
   }
 
   /**
@@ -35,10 +43,12 @@ export default class QuestionController {
   get router() {
     // eslint-disable-next-line new-cap
     const router = Router();
-    router.get('/', this.userAuthorizationMiddleware, this.getQuestions);
-    router.get('/:id', this.userAuthorizationMiddleware, this.getQuestion);
-    router.put('/', this.userAuthorizationMiddleware, this.updateQuestions);
-    router.post('/', this.userAuthorizationMiddleware, this.addQuestions);
+    router.use(this.userAuthorizationMiddleware);
+    router.get('/', this.getQuestions);
+    router.get('/:id', this.getQuestion);
+    router.put('/', this.updateQuestions);
+    router.post('/', this.addQuestions);
+    router.post('/submit', this.submitResponse);
     return router;
   }
 
@@ -64,17 +74,96 @@ export default class QuestionController {
     const Question = this.database.Question;
     // TODO: validate the questions query parameters
     const query={};
-
     try {
-      const results = await Question.find(query);
+      let offset = 0;
+      if (req.query.offset) {
+        offset = parseInt(req.query.offset);
+      }
+      let limit = 0;
+      if (req.query.limit) {
+        limit = parseInt(req.query.limit);
+      }
+      const count = await Question.find({query}).estimatedDocumentCount();
+      let mq = Question.find(query);
+      if (req.query.sort) {
+        mq=mq.sort(req.query.sort);
+      }
+      const results = await mq.skip(offset).limit(limit);
       const questions=[];
       results.forEach((q) => {
         questions.push(q.toObject());
       });
+      res.set('X-Total-Count', ''+count);
       return res.json(questions);
     } catch (err) {
       console.error(err);
       return res.status(500);
+    }
+  }
+
+  /**
+   * submit response tp the a questionSet identified by the id
+   * @param {express.request} req request object
+   * @param {express.response} res response object
+   * @return {any} nothing
+   */
+  async submitResponse(req, res) {
+    this.logger.trace('submitResponse');
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    const {questionSet, question, response} = req.body;
+    if (IsNullOrEmpty(questionSet) ||
+          IsNullOrEmpty(question) || IsNullOrEmpty(response)) {
+      this.logger.warn('bad submittion', req.body);
+      return res.sendStatus(400);
+    }
+
+    const QuestionSet = this.database.QuestionSet;
+    const Response = this.database.Response;
+
+    try {
+      const qs=await QuestionSet.findOne({_id: ObjectId(questionSet)});
+      if (!qs) {
+        this.logger.trace(qs);
+        return res.sendStatus(404);
+      }
+
+      // TODO: search in array when multiple questions
+      if ( qs.questions[0]._id.toString() !== question) {
+        this.logger.trace(qs);
+        return res.sendStatus(404);
+      }
+
+      const match = await Response.findOne({
+        user: user._id,
+        date: moment().utc().startOf('day'),
+        set: ObjectId(questionSet),
+        question: ObjectId(question),
+      });
+
+      if (match) {
+        return res.sendStatus(403);
+      }
+
+      const todaysResponse = new Response({
+        user: user._id,
+        date: moment().utc().startOf('day'),
+        set: ObjectId(questionSet),
+        question: ObjectId(question),
+        response: response,
+      });
+
+      await todaysResponse.save();
+
+      return res.sendStatus(200);
+    } catch (err) {
+      this.logger.error(err);
+      return res.sendStatus(500);
     }
   }
 
@@ -93,14 +182,17 @@ export default class QuestionController {
       });
     }
 
-    const Question = this.database.Question;
+    const QuestionSet = this.database.QuestionSet;
 
     if (req.params.id==='current') {
       try {
-        const results = await Question.find({})
-            .skip(Math.trunc(Math.random()*400))
-            .limit(1);
-        return res.json(results[0].toObject());
+        const result = await QuestionSet
+            .findOne({name: 'default', date: (moment().utc().startOf('day'))});
+        if (result) {
+          return res.json(result.toObject());
+        } else {
+          return res.sendStatus(404);
+        }
       } catch (err) {
         console.error(err);
         return res.status(500);

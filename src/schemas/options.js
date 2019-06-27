@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 // Data we need to collect/confirm to have the app go.
 const fields = {
-  name: {type: String, default: ''},
+  name: {type: String, lowercase: true, trim: true},
   options: [String],
 };
 

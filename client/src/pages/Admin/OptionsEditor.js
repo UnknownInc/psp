@@ -5,6 +5,7 @@ import 'react-tageditor/dist/style/default.css';
 import { Form, Segment, Table, Icon, Input, Button, Message, Modal, List } from 'semantic-ui-react';
 
 import { getHeaders } from '../../config'
+import Options from '../../domain/Options';
 
 export default class OptionsEditor extends Component {
   constructor(props) {
@@ -17,7 +18,11 @@ export default class OptionsEditor extends Component {
   }
 
   async componentDidMount() {
-    await this.loadAllOptions();
+    try {
+      await this.loadAllOptions();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async loadAllOptions(e) {

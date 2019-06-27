@@ -38,9 +38,9 @@ steps:
   '--build-arg',
   'COMMITID=${SHORT_SHA}',
   '-t', 
-  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest',
+  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest',
   '-t', 
-  'gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA',  
+  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',  
   '.']
   dir: "psp"
 # This step clones the psp-env repository & checkout dev
@@ -71,8 +71,8 @@ steps:
     echo $$PATH
     go get -u gopkg.in/mikefarah/yq.v2
     cd psp/psp-env && \
-    yq.v2 w -i values.yaml psp.image.repository gcr.io/ind-si-infra-managment-184960/psp-${BRANCH_NAME} && \
-    yq.v2 w -i values.yaml psp.image.tag "${SHORT_SHA}"
+    yq.v2 w -i values.yaml app.image.repository gcr.io/ind-si-infra-managment-184960/${_APP_NAME}-${BRANCH_NAME} && \
+    yq.v2 w -i values.yaml app.image.tag "${SHORT_SHA}"
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest
@@ -83,7 +83,7 @@ steps:
     set -x && \
     cd psp/psp-env && \
     git add values.yaml && \
-    git commit -m "Deploying image gcr.io/${PROJECT_ID}/psp-${BRANCH_NAME}:${SHORT_SHA}
+    git commit -m "Deploying image gcr.io/${PROJECT_ID}/${_APP_NAME}-${BRANCH_NAME}:${SHORT_SHA}
     Built from commit ${COMMIT_SHA} of repository psp
     Author: $(git log --format='%an <%ae>' -n 1 HEAD)" && \
     git push origin dev 
@@ -91,13 +91,12 @@ steps:
   - name: 'ssh'
     path: /root/.ssh
 substitutions:
-  _CLUSTER_NAME: 'psp-cluster-1'
-  _CLUSTER_LOCATION: 'us-central1-a'
+  _APP_NAME: 'psb'
 options:
   substitution_option: 'ALLOW_LOOSE'
 images:
-- gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:latest
-- gcr.io/$PROJECT_ID/psp-${BRANCH_NAME}:$SHORT_SHA
+- gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest
+- gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA
 
 #reference https://cloud.google.com/cloud-build/docs/build-config
 # steps:

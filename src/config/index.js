@@ -29,7 +29,7 @@ const config =Object.assign({
   env: ENV,
   secrets: {...secrets},
   buildInfo: {...buildInfo},
-  jwtsecret: process.env.PSP_JWT_KEY,
+  jwtsecret: process.env.JWT_KEY,
 }, envConfig);
 
 module.exports = config;

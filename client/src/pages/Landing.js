@@ -5,19 +5,23 @@ import { getProfile } from '../config'
 import Home from './Home'
 import { Form} from 'semantic-ui-react';
 import Page from '../components/Page';
-
+import VError from 'verror';
 export default class Landing extends Component {
 
   // A bit of state to give the user feedback while their email address is being 
   // added to the User model on the server.
   state = {
     loading: true,
-    email:'',
     iagree: false,
-    sendingEmail: false
+    sendingEmail: false,
+    attemptEmail: window.localStorage.getItem('registerAttempt')
   }
 
   async componentDidMount() {
+    await this.loadProfile();
+  }
+
+  loadProfile = async () =>{
     this.setState({loading: true})
 
     const errorHdr = 'Unable to retrive the user profile.';
@@ -42,34 +46,75 @@ export default class Landing extends Component {
     this.setState({iagree: checked})
   }
 
+  onVerify = async () => {
+
+    try{
+      const res = await fetch(`/api/user/verify`,{
+          method: 'POST',
+          headers: {
+            accept: 'application/json', 
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({token: this.state.code, email: this.state.email})
+        })
+      
+        if (!res.ok) {
+          throw new VError({
+            name:'APIError',
+            cause: res.statusText,
+            info:{
+              statusCode: res.statusCode,
+            }
+          });
+        }
+        const data = await res.json()
+        window.localStorage.setItem('m360t', data.token);
+        notify.show(data.message)
+        this.setState({loading: true})
+        await this.loadProfile();
+    } catch(err) {
+      this.setState({error: err, errorMessage: 'Unable to confirm', sendingEmail: false})
+      console.log(err)
+    } finally {
+      this.setState({sendingEmail: false})
+    }
+
+  }
+
   onSubmit = async event => {
     event.preventDefault()
-    this.setState({ sendingEmail: true})
-    try{
-    const res = await fetch(`/api/user/register`, {
-      method: 'POST',
-      headers: {
-        accept: 'application/json', 
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({ email: this.state.email })
-    })
-    const data = await res.json() 
-    
-    if (res.status===200){
-      // Everything has come back successfully, time to update the state to 
-      // reenable the button and stop the <Spinner>. Also, show a toast with a 
-      // message from the server to give the user feedback and reset the form 
-      // so the user can start over if she chooses.
-      notify.show(data.message)
-    } else if (res.status>=400) {
-      notify.show(data.error);
+    if (this.state.code && this.state.email) {
+      return await this.onVerify()
     }
-    this.setState({ sendingEmail: false})
-    //this.form.reset()
+    try{
+      this.setState({ sendingEmail: true});
+      const res = await fetch(`/api/user/register`, {
+        method: 'POST',
+        headers: {
+          accept: 'application/json', 
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({ email: this.state.email })
+      })
+      const data = await res.json() 
+      
+      if (res.status===200){
+        // Everything has come back successfully, time to update the state to 
+        // reenable the button and stop the <Spinner>. Also, show a toast with a 
+        // message from the server to give the user feedback and reset the form 
+        // so the user can start over if she chooses.
+        const email = this.state.email;
+        notify.show(data.message)
+        window.localStorage.setItem('registerAttempt', email);
+        this.setState({attemptEmail: email})
+      } else if (res.status>=400) {
+        notify.show(data.error);
+      }
+      //this.form.reset()
     } catch(err) {
       console.log(err)
       notify.show('Error Registering! Please try again.')
+    } finally {
       this.setState({ sendingEmail: false})
     }
   }
@@ -78,8 +123,31 @@ export default class Landing extends Component {
     return <Home profile={this.state.profile}/>
   }
 
+  renderConfirmationBox = () => {
+    const { iagree, attemptEmail, code } = this.state
+    if (!attemptEmail) {
+      return null;
+    }
+
+    return <Form.Group>
+      <Form.Input
+        placeholder='Code that was send to your email'
+        name='code'
+        type='text'
+        value={code}
+        onChange={this.handleChange}
+        required
+        error={!code || code===''}
+        size='huge'
+        disabled={!iagree }
+        action={{color:'blue', content:'Confirm'}}
+      />
+
+    </Form.Group>
+  }
+
   render = () => {
-    const { sendingEmail, email, iagree } = this.state
+    const { sendingEmail, email, iagree, attemptEmail } = this.state
 
     if (this.state.loading) {
         return <Spinner size='massive' message='Loading...' />
@@ -95,18 +163,18 @@ export default class Landing extends Component {
         <Form
           onSubmit={this.onSubmit}>
           <Form.Group>
-          <Form.Input
-            placeholder='Your work email'
-            name='email'
-            type='email'
-            value={email}
-            onChange={this.handleChange}
-            required
-            error={!iagree}
-            size='huge'
-            disabled={!iagree }
-            action={{color:'blue', content:'Register'}}
-          />
+            <Form.Input
+              placeholder='Your work email'
+              name='email'
+              type='email'
+              value={email||attemptEmail}
+              onChange={this.handleChange}
+              required
+              error={!iagree}
+              size='huge'
+              disabled={!iagree }
+              action={attemptEmail ? null : {color:'blue', content:'Register'}}
+            />
           </Form.Group>
           <Form.Group>
             <Form.Checkbox
@@ -116,6 +184,7 @@ export default class Landing extends Component {
               onChange={this.handleCheckboxChange}
               />
           </Form.Group>
+          {this.renderConfirmationBox()}
         </Form>
       </div>
     </Page>)

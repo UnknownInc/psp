@@ -53,12 +53,12 @@ class AdminUsersPage extends Component {
     if (sortColumn !== clickedColumn) {
       this.setState({
         sortColumn: clickedColumn,
-        sortDirection: '1',
+        sortDirection: 'ascending',
       },()=>this.loadUsers())
       return
     }
     this.setState({
-      sortDirection: sortDirection === 1 ? -1 : 1,
+      sortDirection: sortDirection[0] === 'a' ? 'descending' : 'ascending',
     }, ()=>this.loadUsers())
   }
 
@@ -69,7 +69,7 @@ class AdminUsersPage extends Component {
     try {
       this.setState({loading: true, error:null});
       const headers=getHeaders();
-      const res = await fetch(`/api/user?offset=${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection===-1?'-':''}${this.state.sortColumn}`,
+      const res = await fetch(`/api/user?offset=${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`,
           { headers})
 
       if (!res.ok) {
@@ -238,7 +238,7 @@ class AdminUsersPage extends Component {
                   <Menu.Item as='a' icon disabled={currentPage===1}>
                     <Icon name='chevron left' />
                   </Menu.Item>
-                  {pages.map(i=><Menu.Item as='a' onClick={e=>{
+                  {pages.map(i=><Menu.Item as='a' active={currentPage===i} onClick={e=>{
                     const pageNumber=i;
                     this.loadPage(pageNumber);
                   }} >{i}</Menu.Item>)}
