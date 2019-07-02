@@ -1,11 +1,10 @@
 import React, {Component} from 'react';
-import TagsEditor from 'react-tageditor';
 
 import 'react-tageditor/dist/style/default.css';
 import { Form, Segment, Table, Icon, Input, Button, Message, Modal, List } from 'semantic-ui-react';
 
 import { getHeaders } from '../../config'
-import Options from '../../domain/Options';
+//import Options from '../../domain/Options';
 
 export default class OptionsEditor extends Component {
   constructor(props) {
@@ -153,7 +152,7 @@ export default class OptionsEditor extends Component {
           </Modal.Description>
         </Modal.Content>
         <Modal.Actions>
-          <Button color='green' icon='check' onClick={this.addNewOption} content={'Add'} disabled={nerror!==null}/>
+          <Button color='green' icon='check' onClick={this.addNewOption} content={'Add'} disabled={nerror!==null} type='submit'/>
         </Modal.Actions>
       </Modal>
   }

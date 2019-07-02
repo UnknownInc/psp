@@ -29,5 +29,6 @@ nodeSchema.plugin(MpathPlugin, {
 
 nodeSchema.index({user: 1});
 nodeSchema.index({name: 1});
+nodeSchema.index({children: 1});
 
 module.exports = nodeSchema;

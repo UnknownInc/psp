@@ -9,6 +9,6 @@ const Reports = loadable(() => import('./ReportsPage'), {
 
 export default class ReportsPage extends React.Component {
   render() {
-    return <Reports />;
+    return <Reports {...this.props}/>;
   }
 }

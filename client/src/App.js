@@ -15,6 +15,7 @@ import './App.css';
 import { Menu, Icon, Dropdown, Image } from 'semantic-ui-react';
 import LoginSwitch from './components/LoginSwitch';
 import { isNullOrUndefined } from 'util';
+import 'react-sortable-tree/style.css'; // This only needs to be imported once in your app
 
 
 const MenuLink = ({ label, to, activeOnlyWhenExact, ...menuProps })=>{

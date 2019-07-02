@@ -20,4 +20,7 @@ const fields = {
 // One nice, clean line to create the Schema.
 const questionSchema = new Schema(fields);
 
+questionSchema.index({question: 1});
+questionSchema.index({category: 1});
+questionSchema.index({tags: 1});
 module.exports = questionSchema;

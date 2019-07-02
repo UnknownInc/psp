@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import TagsEditor from 'react-tageditor';
 
 import 'react-tageditor/dist/style/default.css';
-import { Form, Dropdown, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton } from 'semantic-ui-react';
+import { Form, Dropdown, Segment, Icon, Button } from 'semantic-ui-react';
 
 const categories = [
   {key:"culture", text:"Culture", value:"Culture"},
@@ -45,7 +45,7 @@ export default class QuestionForm extends Component {
     this.setState({query})
   }
 
-  handleTagsChange = (tagsChanged, allTags, action) =>{
+  handleTagsChange = (tagsChanged, allTags) =>{
     const query = {...this.state.query};
     query.tags=allTags;
     this.setState({query})

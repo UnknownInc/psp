@@ -96,7 +96,17 @@ class AdminQuestionsPage extends Component {
     const headers= getHeaders();
     
     try{
-      const res = await fetch(`/api/question?${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`, { headers});
+      let url=`/api/question?offset=${this.state.offset}&limit=${this.state.limit}`;
+      url+=`&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`;
+      const qf=this.state.questionFilter?this.state.questionFilter.trim():'';
+      if (qf!=='') {
+        url+=`&q=${qf}`
+      }
+      const cf=this.state.categoryFilter?this.state.categoryFilter.trim():'';
+      if (cf!=='') {
+        url+=`&c=${cf}`
+      }
+      const res = await fetch(url , { headers});
 
       if (!res.ok) {
         return this.setState({loading: false, error:{header:res.statusText}, isNotAuthorized: false})
@@ -432,32 +442,6 @@ class AdminQuestionsPage extends Component {
       </Table>
     </Segment>
     </div>)
-  }
-
-  renderQSFilterPanel(){
-    return <Segment basic>
-      <Accordion panels={[
-        { 
-          key: 'filterpane',
-          title: {
-            content:<span><Icon name='filter'/> Filter Options</span>
-          },
-          content:{
-            content:
-            <Form onSubmit={this.loadUsers}>
-              <Form.Group widths='equal'>
-                <Form.Field control={Input} label='Question' placeholder='Are*' value={this.state.questionFilter} 
-                  onChange={e=>this.setState({questionFilter: e.target.value})}/>
-                <Form.Field control={Input} label='Category' placeholder='rak*' value={this.state.categoryFilter} 
-                  onChange={e=>this.setState({categoryFilter: e.target.value})}/>
-                {/* <Form.Field control={Select} label='Gender' options={options} placeholder='Gender' /> */}
-              </Form.Group>
-              <Form.Field control={Button}>Refresh</Form.Field>
-            </Form>
-          }
-        }
-      ]}/>
-    </Segment>
   }
 
   renderQFilterPanel(){

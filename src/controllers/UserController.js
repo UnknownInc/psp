@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 const {Router} = require('express');
 import {getEmailParts} from '../common/helpers';
 const uuidv4 = require('uuid/v4');
@@ -31,6 +32,7 @@ export default class UserController {
     this.getUsers = this.getUsers.bind(this);
     this.verify = this.verify.bind(this);
     this.updateUser = this.updateUser.bind(this);
+    this.createUser = this.createUser.bind(this);
   }
 
   /**
@@ -44,7 +46,7 @@ export default class UserController {
     router.post('/verify', this.verify);
     router.get('/:id', this.userAuthorizationMiddleware, this.getUser);
     router.put('/:id', this.userAuthorizationMiddleware, this.updateUser);
-    // router.post('/', inject('createUser'), this.create);
+    router.post('/', this.userAuthorizationMiddleware, this.createUser);
     // router.put('/:id', inject('updateUser'), this.update);
     // router.delete('/:id', inject('deleteUser'), this.delete);
 
@@ -80,6 +82,25 @@ export default class UserController {
       if (req.query.limit) {
         limit = parseInt(req.query.limit);
       }
+
+      if (req.query.name) {
+        query.name=new RegExp(req.query.name, 'i');
+      }
+
+      if (req.query.email) {
+        query.email=new RegExp(req.query.email, 'i');
+      }
+      if (req.query.c) {
+        query.capability=new RegExp(req.query.c, 'i');
+      }
+      if (req.query.i) {
+        query.industry=new RegExp(req.query.i, 'i');
+      }
+      if (req.query.t) {
+        query.title=new RegExp(req.query.t, 'i');
+      }
+
+
       const count = await User.find({query}).estimatedDocumentCount();
       let mq = User.find(query);
       if (req.query.sort) {
@@ -103,7 +124,7 @@ export default class UserController {
    * @param {*} res response object
    * @return {*} if successful returns the matched user
    */
-  getUser(req, res) {
+  async getUser(req, res) {
     this.logger.trace('getUser', req.params.id);
     const user = req.user;
     if (!user) {
@@ -111,13 +132,20 @@ export default class UserController {
         error: 'Unknown user',
       });
     }
+    const User = this.database.User;
+    let result;
     if (req.params.id!=='current') {
-      if (!user.isAdmin) {
+      if ((req.params.id!==user._id) && !(user.isAdmin)) {
         return res.sendStaus(403);
       }
+      const u = await User.findOne({_id: ObjectId(req.params.id)});
+      result = u.toObject();
+    } else {
+      result = user;
     }
+    delete result.roles;
     res.set('Cache-Control', 'public, max-age=60');
-    return res.json(user);
+    return res.json(result);
   }
 
   /**
@@ -150,9 +178,48 @@ export default class UserController {
         return res.sendStaus(404);
       }
 
+      this.logger.debug(req.body);
       if (req.body.name) {
-        u.name= req.body.name;
+        u.name = req.body.name.trim();
       }
+
+      if (req.body.title) {
+        u.title = req.body.title.trim();
+      }
+
+      if (req.body.careerStage) {
+        u.careerStage = req.body.careerStage.trim();
+      }
+
+      if (req.body.primarySkill) {
+        u.primarySkill = req.body.primarySkill.trim();
+      }
+
+      if (req.body.capability) {
+        u.capability = req.body.capability.trim();
+      }
+
+      if (req.body.industry) {
+        u.industry = req.body.industry.trim();
+      }
+
+      if (req.body.oid) {
+        u.oid = req.body.oid.trim();
+      }
+
+      if (req.body.tags) {
+        u.tags = req.body.tags;
+      }
+
+      if (req.body.skills) {
+        u.skills = req.body.skills;
+      }
+
+      if (req.body.clients) {
+        u.clients = req.body.clients;
+      }
+
+      // details: {type: Object},
 
       await u.save();
 
@@ -160,9 +227,97 @@ export default class UserController {
       result.isAdmin = user.isAdmin;
       // set to expire after 1 hour
       this.cache.set(u.email.toLowerCase(), JSON.stringify(result), 'EX', 3600);
-      return res.json(u.toObject());
+      delete result.roles;
+      return res.json(result);
     } catch (err) {
       this.logger.error('updateUser exception:', err);
+      return res.sendStaus(500);
+    }
+  }
+
+
+  /**
+   * create user
+   * @param {*} req request object
+   * @param {*} res response object
+   * @return {any} nothing
+   */
+  async createUser(req, res) {
+    this.logger.trace('createUser');
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    if (!user.isAdmin) {
+      return res.sendStaus(403);
+    }
+
+    const User = this.database.User;
+
+    try {
+      // this.logger.debug(req.body);
+      if (!req.body.email) {
+        return res.status(400).json({
+          error: 'Missing email',
+        });
+      }
+
+      const u = new User({email: req.body.email});
+
+      if (req.body.name) {
+        u.name = req.body.name.trim();
+      }
+
+      if (req.body.title) {
+        u.title = req.body.title.trim();
+      }
+
+      if (req.body.careerStage) {
+        u.careerStage = req.body.careerStage.trim();
+      }
+
+      if (req.body.primarySkill) {
+        u.primarySkill = req.body.primarySkill.trim();
+      }
+
+      if (req.body.capability) {
+        u.capability = req.body.capability.trim();
+      }
+
+      if (req.body.industry) {
+        u.industry = req.body.industry.trim();
+      }
+
+      if (req.body.oid) {
+        u.oid = req.body.oid.trim();
+      }
+
+      if (req.body.tags) {
+        u.tags = req.body.tags;
+      }
+
+      if (req.body.skills) {
+        u.skills = req.body.skills;
+      }
+
+      if (req.body.clients) {
+        u.clients = req.body.clients;
+      }
+
+      // details: {type: Object},
+
+      await u.save();
+
+      const result = u.toObject();
+      // set to expire after 1 hour
+      this.cache.set(u.email.toLowerCase(), JSON.stringify(result), 'EX', 3600);
+      delete result.roles;
+      return res.json(result);
+    } catch (err) {
+      this.logger.error('createUser exception:', err);
       return res.sendStaus(500);
     }
   }
@@ -306,18 +461,18 @@ export default class UserController {
           }
       );
 
-      const Node= this.database.Node;
-      try {
-        // eslint-disable-next-line new-cap
-        const n = await Node.findOne({user: ObjectId(user._id), type: 'default'});
-        if (!n) {
-          // eslint-disable-next-line new-cap
-          const n = new Node({user: ObjectId(user._id), type: 'default'});
-          await n.save();
-        }
-      } catch (ex) {
-        this.logger.error('verify exception', ex);
-      }
+      // const Node= this.database.Node;
+      // try {
+      //   // eslint-disable-next-line new-cap
+      //   const n = await Node.findOne({user: ObjectId(user._id), type: 'default'});
+      //   if (!n) {
+      //     // eslint-disable-next-line new-cap
+      //     const n = new Node({user: ObjectId(user._id), type: 'default'});
+      //     await n.save();
+      //   }
+      // } catch (ex) {
+      //   this.logger.error('verify exception', ex);
+      // }
       return res.status(200).json({
         message: 'Successfully verified.',
         token: authtoken,
