@@ -1,11 +1,19 @@
 import VError from 'verror';
 import APIResource from './APIResource';
 import uuidv1 from 'uuid/v1'
+const mongoose = require('mongoose');
+
+const ObjectId = mongoose.Types.ObjectId;
+
 const userService = new APIResource({resourceName:'user'})
 
 export default class User {
   constructor(data){
-    this.set(data);
+    if (ObjectId.isValid(data)) {
+      this._id=data;
+    } else {
+      this.set(data);
+    }
   }
 
   set({ _id, name, email, title, capability, industry, primarySkill, skills, clients, careerStage, oid, tags, details}) {

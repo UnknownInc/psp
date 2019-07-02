@@ -90,6 +90,10 @@ export default class TeamController {
       n.type=nodeType;
       n.tags=[...(req.body.tags||[])];
       n = await n.save();
+      n = await Node.populate(n, [
+        {'path': 'user', 'select': ['email', 'name', 'title']},
+        {'path': 'children', 'select': ['email', 'name', 'title']},
+      ]);
       return res.json(n.toObject());
     } catch (err) {
       this.logger.error('Unable to create a node', err);
