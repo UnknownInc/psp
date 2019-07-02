@@ -1,6 +1,6 @@
 {
   "name": "psp",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "proxy": "http://localhost:8080",
   "private": true,
   "dependencies": {
@@ -20,6 +20,7 @@
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
     "react-semantic-ui-datepickers": "1.10.0",
+    "react-sortable-tree": "^2.6.2",
     "react-sparklines": "^1.7.0",
     "react-tageditor": "^0.2.3",
     "semantic-ui-calendar-react": "^0.15.0",

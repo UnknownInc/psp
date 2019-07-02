@@ -84,7 +84,7 @@ class TeamList extends Component {
             content:<TeamView team={t} key={t._id} loggedInUserId={loggedInUserId} styled/>
           }
         }
-      })} exclusive={false} styled fluid/>
+      })} exclusive={false} fluid/>
     </div>
   }
 }

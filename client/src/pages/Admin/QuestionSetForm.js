@@ -4,12 +4,11 @@ import VError from 'verror';
 
 // import { useDrag, useDrop } from 'react-dnd'
 import 'react-tageditor/dist/style/default.css';
-import { Form, Dropdown, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Accordion, Input, Menu, TableBody } from 'semantic-ui-react';
+import { Form, Dropdown, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Modal, Accordion, Menu } from 'semantic-ui-react';
 
 import SemanticDatepicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 
-import { notify } from 'react-notify-toast'
 
 import QuestionSet from '../../domain/QuestionSet';
 // import PagedGrid from './PagedGrid';
@@ -59,7 +58,7 @@ export default class QuestionSetForm extends Component {
     this.setState({loading: true, loadingMessage: msg});
   }
 
-  loadQuestionSet=async (offset, limit) => {
+  loadQuestionSet=async () => {
     const {questionSet} = this.state;
     if (!questionSet) return;
 
@@ -223,7 +222,7 @@ export default class QuestionSetForm extends Component {
       <Table.Header>
         <Table.Row>
           <Table.HeaderCell>
-              <Checkbox checked={this.state.allSelected} onChange={(e)=>{
+              <Checkbox checked={this.state.allSelected} onChange={()=>{
                 let allSelected=!this.state.allSelected;
                 const items=this.state.items;
                 for(let i=0;i<items.length;++i) { items[i].isSelected=allSelected}
@@ -253,7 +252,7 @@ export default class QuestionSetForm extends Component {
             const style= isOld?{ color: 'gray', fontStyle: 'italic'}:{};
             return <Table.Row key={q._id} positive={isNew} warning={qs.isModified} style={style}>
               <Table.Cell collapsing>
-                <Checkbox checked={q.isSelected} onChange={e=>{
+                <Checkbox checked={q.isSelected} onChange={()=>{
                     const {items} = this.state;
                     let allSelected=true;
                     items[index].isSelected = !(items[index].isSelected);
@@ -263,7 +262,7 @@ export default class QuestionSetForm extends Component {
               </Table.Cell>
               <Table.Cell>
                 {isOld?null:(
-                  <Popup trigger={<Button circular icon='edit' onClick={e=>{this.setState({ openEditModal: true, editingItem: qs });}}/>}>
+                  <Popup trigger={<Button circular icon='edit' onClick={()=>{this.setState({ openEditModal: true, editingItem: qs });}}/>}>
                     click here to edit the question
                   </Popup>
                 )}
@@ -275,7 +274,7 @@ export default class QuestionSetForm extends Component {
               <Table.Cell >{q.category}</Table.Cell>
               <Table.Cell collapsing>
               {isOld?null:(
-              < Popup trigger={<Button circular icon='delete' onClick={e=>{
+              < Popup trigger={<Button circular icon='delete' onClick={()=>{
                   let items=this.state.items.slice(0,i).concat(this.state.items.slice(i+1));
                   let deletedItems=[].push(q);
                   this.setState({items, deletedItems})
@@ -293,7 +292,7 @@ export default class QuestionSetForm extends Component {
               </Menu.Item>
               {pages.map(i=><Menu.Item key={i} as='a' 
                 active={currentPage===i}
-                onClick={e=>{
+                onClick={()=>{
                   const pageNumber=i;
                   this.loadPage(pageNumber);
                 }} >{i}</Menu.Item>)}

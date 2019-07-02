@@ -20,10 +20,10 @@ export default class Options {
     try {
       const url = '/' + name + (onlynames?'?onlynames=1':'');
       const {data} = await optionsService.fetch(url);
-      return data;
+      return new Options(data);
     } catch (err) {
       console.error(err);
-      throw new VError(err,'Unable to retrive a list of available questionsets.');
+      throw new VError(err,'Unable to retrive a list of available options.');
     }
   }
 }

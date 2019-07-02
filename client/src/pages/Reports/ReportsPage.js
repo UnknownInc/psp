@@ -2,64 +2,14 @@ import React, {Component} from 'react';
 
 import Page from '../../components/Page';
 import moment from 'moment';
-
-import { Menu,Container, Dropdown, Form, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Responsive,Modal, FormButton, Tab, Comment, Label, Grid, Card, Item, Statistic, RevealContent } from 'semantic-ui-react';
-import { getProfile , getHeaders} from '../../config';
-import { isNullOrUndefined } from 'util';
+import VError from 'verror';
+import { Menu,Container, Form, Header, Segment, Icon, Button, Message, Popup, Grid, Card, Item, Statistic } from 'semantic-ui-react';
+import { getProfile} from '../../config';
 
 import { Sparklines, SparklinesLine,SparklinesSpots,SparklinesReferenceLine } from 'react-sparklines';
-/*
-import Plot from 'react-plotly.js';
-<Plot
-  data={[
-    {
-      
-      x: ['2019-01-01', '2019-02-01', '2019-03-01'],
-      y: [2, 3.5, 4.1],
-      type: 'scatter',
-      mode: 'lines+markers',
-      fill:'tozeroy',
-      line:{color: 'rgb(8, 159,255)', width: 2},
-      marker: {
-        color: 'white',
-        size: 8,
-        line: {
-          color: 'rgb(8, 159,255)',
-          width: 2
-        }
-      }
-    }
-  ]}
-  config={{responsive:true}}
-  layout={{
-    legend: false,
-    autosize:true,
-    width: '100%', height: '100%',
-    title: {
-      text: 'Culture',
-      font:{
-        family:'fnlight',
-        size:20,
-        color: 'lightgrey'
-      },
-      xref: 'paper',
-      x: 0.005,
-    },
-    yaxis:{
-      showticklabels:false,
-      showgrid: false,
-    },
-    xaxis:{
-      nticks:3,
-      showgrid: false,
-      range: ['2019-01-01', '2019-03-02'],
-      type:'date'
-    }
-  }}
-/> */
-
-import SemanticDatepicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
+import Team from '../../domain/Team';
+import OptionsDropdown from '../../components/OptionsDropdown';
 
 const intervalOptions =[
   {key: 'last_week', text:'Last week', value:'7'},
@@ -69,21 +19,13 @@ const intervalOptions =[
   {key: 'last_year', text:'Last year', value:'365'},
 ]
 
-const categories = [
-  {key:"culture", text:"Culture", value:"Culture"},
-  {key:"engagement", text:"Engagement", value:"Engagement"},
-  {key:"leaders", text:"Leaders", value:"Leaders"},
-  {key:"Manager", text:"Manager", value:"Manager"},
-  {key:"not_categorized", text:"Not Categorized", value:"Not Categorized"},
-  {key:"team", text:"Team", value:"Team"},
-  {key:"work_environment", text:"Work Environment", value:"Work Environment"}
-];
 
 class ReportsPage extends Component {
   constructor(props) {
     super(props);
     this.state={
       loading: true,
+      userid: this.props.userid,
       activeItem: 'overview',
       recent:[],
       selectedInterval:intervalOptions[1]
@@ -91,25 +33,27 @@ class ReportsPage extends Component {
   }
 
   async componentDidMount(){
-    const errorHdr = 'Unable to retrive the user profile.';
+    this.setState({loading: true})
+    let error = null;
+    let teams =[];
     try {
-      const {profile, errors} = await getProfile()
-      if (errors.length>0) {
-        return this.setState({loading: false, profile, errors:errors, errorHdr});
-      } 
-      const headers = getHeaders();
-      const response = await fetch(`/api/team?user=${profile._id}`, {headers})
-      if (!response.ok){
-        return this.setState({errors:['Unable to retrive teams information.', 'Please try again.'], loading: false, errorHdr}); 
+      console.log(this.props.location)
+      let userid = this.state.userid;
+      if (!userid) {
+        const {profile} = await getProfile()
+        userid = profile._id;
       }
-
-      const teams=await response.json();
-      const selectedTeam = teams.length>0?teams[0]:null;
-      this.setState({teams, selectedTeam, loading: false, profile, errors:null, errorHdr:null})
-      this.handleFilterChange()
-    } catch (err) {
+      teams=await Team.load({userid})
+    }catch (err) {
       console.error(err);
-      this.setState({profile: null, errors:['Unknown error.', 'Please try again.'], loading: false, errorHdr});
+      error = {
+        header: err.message,
+        cause: VError.cause(err),
+      }
+    } finally {
+      this.setState({loading: false, teams, error},()=>{
+        this.handleFilterChange()
+      })
     }
   }
 
@@ -128,35 +72,41 @@ class ReportsPage extends Component {
     return values;
   }
   handleFilterChange = async ()=>{
-    const {selectedTeam, selectedInterval}=this.state;
-    if (!isNullOrUndefined(selectedTeam)){
-      this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
-      setTimeout(()=>{
-        const summary={ aggregates:{category:[], top:[], bottom:[]}};
-        const categoryAggregates=[
-          {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
-          {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-          {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-          {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
-        ]
-        summary.aggregates.category=categoryAggregates;
-        summary.aggregates.top=[
-          {question:"Do your teammates know how to keep Sapient & Sapient's Clients intellectual property and data safe?", category:'Work Environment', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 3.6}},
-          {question:"Do you find your work to be a positive challenge?", category:'Engagement', date:new Date(2019,0,23), data:{companyAvg:4.0, average: 3.9}},
-          {question:"Does working at Sapient motivate you to exceed expectations at work?", category:'Culture', date:new Date(2019,2,1), data:{companyAvg:3.8, average: 3.6}},
-        ]
-        summary.aggregates.bottom=[
-          {question:"Are you planning on looking for a new job in the near future?", category:'Engagement', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 2.8}},
-          {question:"How often do you get to decide the best way to get your work done?", category:'Manager', date:new Date(2019,0,23), data:{companyAvg:3.4, average: 2.0}},
-          {question:"When my leader delivers feedback, they first seek to understand.", category:'Leaders', date:new Date(2019,0,5), data:{companyAvg:3.7, average: 2.1}},
-        ]
-        this.setState({filtering: false, summary})
-      }, 1000)
-    }
+    // const {selectedInterval}=this.state;
+    // if (true){
+    //   this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
+    //   setTimeout(()=>{
+    //     const summary={ aggregates:{category:[], top:[], bottom:[]}};
+    //     const categoryAggregates=[
+    //       {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
+    //       {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+    //       {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+    //       {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
+    //     ]
+    //     summary.aggregates.category=categoryAggregates;
+    //     summary.aggregates.top=[
+    //       {question:"Do your teammates know how to keep Sapient & Sapient's Clients intellectual property and data safe?", category:'Work Environment', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 3.6}},
+    //       {question:"Do you find your work to be a positive challenge?", category:'Engagement', date:new Date(2019,0,23), data:{companyAvg:4.0, average: 3.9}},
+    //       {question:"Does working at Sapient motivate you to exceed expectations at work?", category:'Culture', date:new Date(2019,2,1), data:{companyAvg:3.8, average: 3.6}},
+    //     ]
+    //     summary.aggregates.bottom=[
+    //       {question:"Are you planning on looking for a new job in the near future?", category:'Engagement', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 2.8}},
+    //       {question:"How often do you get to decide the best way to get your work done?", category:'Manager', date:new Date(2019,0,23), data:{companyAvg:3.4, average: 2.0}},
+    //       {question:"When my leader delivers feedback, they first seek to understand.", category:'Leaders', date:new Date(2019,0,5), data:{companyAvg:3.7, average: 2.1}},
+    //     ]
+    //     this.setState({filtering: false, summary})
+    //   }, 1000)
+    // }
   }
 
   handleTeamSelection=(e,data)=>{
-    this.setState({selectedTeam: this.state.teams.find(t=>t.name===data.value)})
+    // const selectedTeams = this.state.teams.filter(t=> (data.value.indexOf(t.name)!==-1));
+    // this.setState({selectedTeams})
+    this.setState({selectedTeams: data.value});
+  }
+
+  handleManagerSelection=(e,data)=>{
+    this.setState({selectedManagers: data.value});
   }
 
   handleIntervalChange=(e,data)=>{
@@ -171,15 +121,39 @@ class ReportsPage extends Component {
   }
 
   renderFilterBar(){
-    const {selectedTeam={}, teams=[], selectedInterval={}, filtering} = this.state;
-    const teamOptions=teams.map(t=>{return {key:t.name, text:t.name, value:t.name}})
+    const {selectedTeams=[], selectedManagers=[], teams=[], selectedInterval={}, filtering, teamtypes=[]} = this.state;
+    const mteams=teams
+      .filter(t=>(teamtypes.length===0 || teamtypes.indexOf(t.type)!==-1))
+
+    const teamOptions=mteams
+      .map(t=>({key:t.name, text:t.name, value:t}))
+
+    const addedEmails=[]
+    const managers = [];
+    selectedTeams.forEach(t=>{
+      t.children.forEach(u=>{
+        if (addedEmails.indexOf(u.email)) {
+          addedEmails.push(u.email);
+          managers.push({key: u.email, text: u.name, value: u});
+        }
+      });
+    })
+
     return <Segment basic loading={filtering}>
       <Form>
         <Form.Group inline>
-          <Form.Select options={teamOptions} label='Team'  value={selectedTeam.name} onChange={this.handleTeamSelection}/>
-          <Form.Select options={[]} label='Manager'  value={null} onChange={this.handleManagerSelection}/>
+          <Form.Field>
+            <label>Team Type</label>
+            <OptionsDropdown opname='teamtype' placeholder='All' value={teamtypes} onChange={(e,{value})=>{
+              this.setState({teamtypes: value});
+            }} selection multiple clearable />
+          </Form.Field>
+          <Form.Select options={teamOptions} label='Team Name' placeholder='All'
+            value={selectedTeams} onChange={this.handleTeamSelection} clearable multiple />
+          <Form.Select options={[...managers]} label='Team Leader' placeholder='All'
+            value={selectedManagers}  onChange={this.handleManagerSelection} clearable multiple />
            
-          <Form.Select options={intervalOptions} label='interval' value={selectedInterval.value} onChange={this.handleIntervalChange} />
+          <Form.Select options={intervalOptions} label='Duration' value={selectedInterval.value} onChange={this.handleIntervalChange} />
           
           <Button basic color='blue' animated='fade' onClick={this.handleFilterChange}>
             <Button.Content hidden>Filter</Button.Content>
@@ -263,7 +237,7 @@ class ReportsPage extends Component {
   }
 
   render(){
-    let {summary=null,recent=[]} = this.state;
+    let {summary=null,recent=[], teams=[]} = this.state;
     if(summary===null) {
       summary={aggregates:{category:[], top:[], bottom:[]}}
     }
@@ -276,42 +250,64 @@ class ReportsPage extends Component {
           {this.renderFilterBar()}
           {this.renderSecondaryMenu()}
         </Segment>
-        <div>
-          <br/>
-          <div style={{display:'flex', justifyContent:'space-between'}}>
-            <Header as={'h3'} color='grey' >Category averages</Header>
-            <div >
-              <Popup trigger={<Icon name='square full' color='red'/>} content={'Critically Below company average'} position='top center'/>
-              <Popup trigger={<Icon name='square full' color='grey'/>} content={'Below company average'} position='top center'/>
-              <Popup trigger={<Icon name='square full' color='green'/>} content={'Around company average'} position='top center'/>
-              <Popup trigger={<Icon name='square full' color='blue'/>} content={'Better than company average'} position='top center'/>
+        {teams.length===0?(
+            <h3>You need to be a team leader with more than 3 people to see some reports.</h3>
+          ):(<div>
+          <div>
+            <br/>
+            <div style={{display:'flex', justifyContent:'space-between'}}>
+              <Header as={'h3'} color='grey' >Category averages</Header>
+              <div >
+                <Popup trigger={<Icon name='square full' color='red'/>} content={'Critically Below company average'} position='top center'/>
+                <Popup trigger={<Icon name='square full' color='grey'/>} content={'Below company average'} position='top center'/>
+                <Popup trigger={<Icon name='square full' color='green'/>} content={'Around company average'} position='top center'/>
+                <Popup trigger={<Icon name='square full' color='blue'/>} content={'Better than company average'} position='top center'/>
+              </div>
             </div>
+            <Card.Group centered itemsPerRow={4} doubling>
+                {
+                  category.length===0?(
+                    <h4><Icon name='frown outline'/> Not enough data to report. Change the filters or Check after few days.</h4>
+                  ):(
+                    category.map(d=>this.renderChart(d.category,d.values, d.companyAvg))
+                  )
+                }
+            </Card.Group>
           </div>
-          <Card.Group centered itemsPerRow={4} doubling>
-              {category.map(d=>this.renderChart(d.category,d.values, d.companyAvg))}
-          </Card.Group>
-        </div>
-        <div>
-          <br/><br/><br/>
-          <Grid columns={2} stackable>
-            <Grid.Column>
-  <Header as={'h3'} color='grey'>Top questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the most favourable responses from the team.'}/></small></Header>
-              <Item.Group>
-                {top.map(i=>this.renderMiniCard(i))}
-              </Item.Group>
-            </Grid.Column>
-            <Grid.Column>
-              <Header as={'h3'} color='grey'>Bottom questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the least favourable responses from the team.'}/></small></Header>
-              <Item.Group>
-                {bottom.map(i=>this.renderMiniCard(i))}
-              </Item.Group>
-            </Grid.Column>
-          </Grid>
-          <Header as={'h3'} color='grey'>Recent questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'Recent questions in reverse chronological order.'}/></small></Header>
-          <Item.Group>
-            {recent.map(i=>this.renderMiniCard(i))}
-          </Item.Group>
-        </div>
+          <div>
+            <br/><br/><br/>
+            <Grid columns={2} stackable>
+              <Grid.Column>
+    <Header as={'h3'} color='grey'>Top questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the most favourable responses from the team.'}/></small></Header>
+                <Item.Group>
+                  {
+                    top.length===0?(
+                      <h4><Icon name='frown outline'/> Not enough data to report.</h4>
+                    ):top.map(i=>this.renderMiniCard(i))
+                  }
+                </Item.Group>
+              </Grid.Column>
+              <Grid.Column>
+                <Header as={'h3'} color='grey'>Bottom questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the least favourable responses from the team.'}/></small></Header>
+                <Item.Group>
+                  {
+                    bottom.length===0?(
+                      <h4><Icon name='frown outline'/> Not enough data to report.</h4>
+                    ):bottom.map(i=>this.renderMiniCard(i))
+                  }
+                </Item.Group>
+              </Grid.Column>
+            </Grid>
+            <Header as={'h3'} color='grey'>Recent questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'Recent questions in reverse chronological order.'}/></small></Header>
+            <Item.Group>
+              {
+                recent.length===0?(
+                      <h4><Icon name='frown outline'/> Not enough data to report.</h4>
+                    ):recent.map(i=>this.renderMiniCard(i))
+              }
+            </Item.Group>
+          </div>
+        </div>)}
       </Container>
     </Page>
   }

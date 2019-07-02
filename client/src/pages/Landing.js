@@ -12,6 +12,7 @@ export default class Landing extends Component {
   // added to the User model on the server.
   state = {
     loading: true,
+    loadingMessage: 'Loading...',
     iagree: false,
     sendingEmail: false,
     attemptEmail: window.localStorage.getItem('registerAttempt')
@@ -25,6 +26,7 @@ export default class Landing extends Component {
     this.setState({loading: true})
 
     const errorHdr = 'Unable to retrive the user profile.';
+    // const errors = [];
     try {
       const {profile, errors} = await getProfile()
       if (errors.length>0) {
@@ -35,6 +37,8 @@ export default class Landing extends Component {
     } catch (err) {
       console.error(err);
       this.setState({profile: null, errors:['Unknown error.', 'Please try again.'], loading: false, errorHdr});
+    } finally {
+
     }
   }
 
@@ -47,7 +51,7 @@ export default class Landing extends Component {
   }
 
   onVerify = async () => {
-
+    this.setState({loading:true, loadingMessage:'Verifying the code...'})
     try{
       const res = await fetch(`/api/user/verify`,{
           method: 'POST',
@@ -55,7 +59,7 @@ export default class Landing extends Component {
             accept: 'application/json', 
             'content-type': 'application/json'
           },
-          body: JSON.stringify({token: this.state.code, email: this.state.email})
+          body: JSON.stringify({token: this.state.code.trim(), email: this.state.email.trim()})
         })
       
         if (!res.ok) {
@@ -70,13 +74,12 @@ export default class Landing extends Component {
         const data = await res.json()
         window.localStorage.setItem('m360t', data.token);
         notify.show(data.message)
-        this.setState({loading: true})
         await this.loadProfile();
     } catch(err) {
-      this.setState({error: err, errorMessage: 'Unable to confirm', sendingEmail: false})
-      console.log(err)
+      console.log(err);
+      notify.show('Error confirming the code! Please try again.')
     } finally {
-      this.setState({sendingEmail: false})
+      this.setState({loading: false})
     }
 
   }
@@ -147,10 +150,10 @@ export default class Landing extends Component {
   }
 
   render = () => {
-    const { sendingEmail, email, iagree, attemptEmail } = this.state
+    const { sendingEmail, email, iagree, attemptEmail, loadingMessage } = this.state
 
     if (this.state.loading) {
-        return <Spinner size='massive' message='Loading...' />
+        return <Spinner size='massive' message={loadingMessage} />
     }
 
     if (this.state.profile) {

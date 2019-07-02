@@ -6,7 +6,7 @@ const ObjectId = Schema.Types.ObjectId;
 // Data we need to collect/confirm to have the app go.
 const fields = {
   name: {type: String, default: ''},
-  email: {type: String, required: true, unique: true, trim: true},
+  email: {type: String, required: true, unique: true, trim: true, lowercase: true},
   tags: [String],
   title: {type: String},
   careerStage: {type: String},
@@ -16,6 +16,7 @@ const fields = {
   clients: [{type: String}],
   industry: {type: String},
   details: {type: Object},
+  oid: {type: String, trim: true},
   company: {type: ObjectId, ref: 'Company'},
   isVerified: {type: Boolean, default: false},
   createdAt: {type: Date, default: Date.now},
@@ -58,6 +59,8 @@ userSchema.index({title: 1});
 userSchema.index({capability: 1});
 userSchema.index({industry: 1});
 userSchema.index({clients: 1});
+userSchema.index({oid: 1});
+
 userSchema.loadClass(UserClass);
 
 module.exports = userSchema;

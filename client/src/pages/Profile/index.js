@@ -9,6 +9,6 @@ const Profile = loadable(() => import('./ProfilePage'), {
 
 export default class ProfilePage extends React.Component {
   render() {
-    return <Profile />;
+    return <Page><Profile {...this.props}/></Page>;
   }
 }

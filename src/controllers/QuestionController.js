@@ -83,6 +83,15 @@ export default class QuestionController {
       if (req.query.limit) {
         limit = parseInt(req.query.limit);
       }
+      if (req.query.q) {
+        query.question=new RegExp(req.query.q, 'i');
+      }
+      if (req.query.c) {
+        query.category=new RegExp(req.query.c, 'i');
+      }
+      if (req.query.t) {
+        query.tags=new RegExp(req.query.t, 'i');
+      }
       const count = await Question.find({query}).estimatedDocumentCount();
       let mq = Question.find(query);
       if (req.query.sort) {

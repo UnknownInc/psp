@@ -16,6 +16,10 @@ export default class QuestionCard extends Component {
   }
 
   async componentDidMount(){
+    await this.getTodaysQuestion();
+  }
+
+  getTodaysQuestion=async()=>{
     try {
       const headers=getHeaders();
       const response = await fetch(`${QUESTIONS_API}/api/question/current`, {headers})
@@ -23,7 +27,12 @@ export default class QuestionCard extends Component {
       if (response.status===401) {
         this.setState({isNotLoggedIn: true, loading: false});
         return 
-      } 
+      }
+      
+      if (response.status===404) {
+        this.setState({loading: false, submitted: true})
+        return
+      }
 
       if (response.status>=500) {
         this.setState({error: "Oops! encountering some technical difficulties, Please visit after sometime.", loading: false});
@@ -36,8 +45,23 @@ export default class QuestionCard extends Component {
 
       //window.localStorage.setItem('lastResponseDate',moment().utc().startOf('day').format('YYYY-MM-DD'));
       if (qs._id && lid!==qs._id) {
+        if (window.interop) {
+          window.interop.sendMessage(`HasQuestions:${qs._id}:${qs.questions.length}`);
+        }
         this.setState({loading: false, query: qs.questions[0], qs})
       } else {
+        if (window.interop) {
+          window.interop.sendMessage(`FinishedQuestions:${qs._id}`);
+        }
+        
+        let today = new Date();
+        let tomorrow = new Date();
+        tomorrow.setDate(today.getDate()+1);
+        tomorrow.setHours(8,0,0)
+        let timeinms=tomorrow.getTime()-today.getTime();
+        setTimeout(async ()=>{
+          await this.getTodaysQuestion();
+        }, timeinms)
         this.setState({loading: false, submitted: true})
       }
     }
@@ -69,6 +93,11 @@ export default class QuestionCard extends Component {
       window.localStorage.setItem('lastResponseDate',moment().utc().startOf('day').format('YYYY-MM-DD'));
       window.localStorage.setItem('lastResponseQs', this.state.qs._id);
 
+      if (window.interop) {
+        window.interop.sendMessage(`FinishedQuestions:${this.state.qs._id}`);
+      } else {
+        console.debug('no interop');
+      }
       this.setState({submitted: true, submiting: false})
     } catch (err) {
       this.setState({submitted: false, submiting: false})

@@ -16,8 +16,8 @@ export const getHeaders = function() {
 }
 
 
-export const getProfile = async ()=>{
-  if (profile) {
+export const getProfile = async (ignoreCache)=>{
+  if (profile && !ignoreCache) {
     return {profile:{...profile}, errors:[]}
   }
   try{
@@ -25,14 +25,23 @@ export const getProfile = async ()=>{
     const response =  await fetch(`/api/user/current`, { headers})
 
     if (response.status===401) {
+      if (window.interop) { 
+        window.interop.sendMessage('NotLoggedIn:401')
+      }
       return {profile: null, errors: ['Not loggedin.']}
     }
 
     if (response.status===403) {
+      if (window.interop) { 
+        window.interop.sendMessage('NotLoggedIn:403')
+      }
       return {profile: null, errors: ['Not Authorized.']}
     }
 
     if (response.status>=400) {
+      if (window.interop) { 
+        window.interop.sendMessage('NotLoggedIn:'+response.status)
+      }
       return {profile: null, errors: ['Unable to retrive loggedin user details.']}
     }
 
@@ -41,7 +50,7 @@ export const getProfile = async ()=>{
     profile={...p};
     setTimeout(()=>{
       profile=null;
-    },1800);
+    },65200);
     return {profile:{...p}, errors: []}
   } catch (err) {
     return {profile: null, errors: ['Unable to retrive loggedin user details.']}

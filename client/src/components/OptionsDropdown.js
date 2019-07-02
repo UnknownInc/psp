@@ -7,25 +7,24 @@ export default class OptionsDropdown extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      options: this.props.options,
+      options: [],
       loading: true,
     }
   }
 
-  async componentDidMount(){
-
+  async componentDidMount() {
     let error=null;
     this.setState({loading: true, error})
     try {
-      const opData = Options.load({name: this.props.opname});
+      const opData = await Options.load({name: this.props.opname});
 
-      const options = opData.options.map((o)=>{return {key:o, text:o, value:o}})
-      
+      const options = (opData.options||[]).map((o)=>{return {key:o, text:o, value:o}})
+
       this.setState({loading: false, options, error})
     } catch (err) {
-      console.error('Failed loaded data for the question set', err);
-      error={
-        header: err.Message||'Unable to fetch question set',
+      console.error('Failed loaded data for the option: ' + this.props.opname, err);
+      error = {
+        header: err.Message||'Unable to fetch the option: ' + this.props.opname,
         messages: [VError.cause(err)]
       };
     } finally {

@@ -1,7 +1,7 @@
 ARG BUILDID
 ARG COMMITID
 
-FROM node:12.2.0-alpine AS build
+FROM node:12.4.0-alpine AS build
 RUN apk add --update --no-cache \
     python \
     make \
@@ -28,7 +28,7 @@ RUN echo ${COMMITID} > COMMIT_ID
 
 RUN rm -rf node_modules
 
-FROM node:12.2.0-alpine AS uibuild
+FROM node:12.4.0-alpine AS uibuild
 RUN apk add --update --no-cache \
     python \
     make \
@@ -48,7 +48,7 @@ RUN npm run build
 
 # Use the official Node.js 12 image.
 # https://hub.docker.com/_/node
-FROM node:12.2.0-alpine
+FROM node:12.4.0-alpine
 RUN apk add --update --no-cache curl
 
 # Create and change to the app directory.
