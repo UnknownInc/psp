@@ -91,13 +91,13 @@ class AdminUsersPage extends Component {
         url+=`&email=${this.state.emailFilter}`
       }
       if (isNotEmpty(this.state.capabilityFilter)){
-        url+=`$c=${this.state.capabilityFilter}`
+        url+=`&c=${this.state.capabilityFilter}`
       }
       if (isNotEmpty(this.state.industryFilter)){
-        url+=`$i=${this.state.industryFilter}`
+        url+=`&i=${this.state.industryFilter}`
       }
       if (isNotEmpty(this.state.titleFilter)){
-        url+=`$t=${this.state.titleFilter}`
+        url+=`&t=${this.state.titleFilter}`
       }
       const res = await fetch(url,
           { headers})
@@ -154,13 +154,13 @@ class AdminUsersPage extends Component {
           teams:[]
         }
         if (data['Project Team'] && data['Project Team Lead Email']) {
-          newUser.teams.push({type:'Project Team', lead:data['Project Team Lead Email'], name:data['Project Team']})
+          newUser.teams.push({type:'ProjectTeam', lead:data['Project Team Lead Email'], name:data['Project Team']})
         }
         if (data['Supervisor']) {
-          newUser.teams.push({type:'Reportees', lead:data['Supervisor'], name:'My Directs'});
+          newUser.teams.push({type:'Reportees', lead:data['Supervisor'], name:'Directs'});
         }
         if (data['Mentor']) {
-          newUser.teams.push({type:'Mentees', lead:data['Mentor'], name:'My Mentees'});
+          newUser.teams.push({type:'Mentees', lead:data['Mentor'], name:'Mentees'});
         }
 
         const idx = users.findIndex(u=>u.email===newUser.email.trim().toLowerCase());
@@ -291,17 +291,17 @@ class AdminUsersPage extends Component {
               <Form.Group widths='equal'>
                 <Form.Field>
                   <label>Capability</label>
-                  <OptionsDropdown opname='capability' value={this.state.capabilityFilter}
+                  <OptionsDropdown opname='capability' value={this.state.capabilityFilter} selection clearable
                     onChange={(e,{value})=>this.setState({capabilityFilter: value})}/>
                 </Form.Field>
                 <Form.Field>
                   <label>Industry</label>
-                  <OptionsDropdown opname='industry' value={this.state.industryFilter}
+                  <OptionsDropdown opname='industry' value={this.state.industryFilter} selection clearable
                     onChange={(e,{value})=>this.setState({industryFilter: value})}/>
                 </Form.Field>
                 <Form.Field>
                   <label>Title</label>
-                  <OptionsDropdown opname='title' value={this.state.titleFilter}
+                  <OptionsDropdown opname='title' value={this.state.titleFilter} selection clearable
                     onChange={(e,{value})=>this.setState({titleFilter: value})}/>
                 </Form.Field>
               </Form.Group>

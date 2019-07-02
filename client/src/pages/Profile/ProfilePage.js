@@ -62,52 +62,10 @@ class ProfilePage extends Component {
     }
   }
 
-  // handleUpdateProfile = async (e)=>{
-  //   e.preventDefault();
-  //   const {profile} = this.state;
-  //   this.setState({loading: true});
-  //   const headers = getHeaders();
-  //   const errorHdr = 'Unable to update the user profile.';
-  //   const errors=[];
-  //   try{
-  //     headers["Content-type"] = "application/json";
-  //     const body = {
-  //       name: profile.name,
-  //       title: profile.title,
-  //       capability: profile.capability,
-  //       industry: profile.industry
-  //     }
-  //     const response = await fetch(`/api/user/${profile._id}`, {
-  //         method: 'PUT',
-  //         headers,
-  //         body: JSON.stringify(body)
-  //       });
-  //     if (response.ok) {
-  //       const user = await response.json();
-  //       this.setState({loading: false, profile: user, errors:[], errorHdr: null})
-  //       return;
-  //     }
-  //     if (response.status===401) {
-  //       return this.setState({loading: false, errorHdr:'Not logged in.', errors})
-  //     }
-  //     if (response.status===403) {
-  //       return this.setState({loading: false, errorHdr:'Not Authorized.', errors})
-  //     }
-  //     throw new Error('Invalid status from te server')
-  //   } catch (err) {
-  //     console.error(err);
-  //     if (err.message) {
-  //       errors.push(err.message);
-  //     }
-  //   }
-  //   errors.push('Unknown error.', 'Please try again.');
-  //   this.setState({profile: null, errors, loading: false, errorHdr});
-  // }
-
   renderError() {
-    const {errorHdr, errors=[]} = this.state;
-    if (!errorHdr) return null
-    return <Message error header={errorHdr} list={errors} />
+    const {error} = this.state;
+    if (!error) return null
+    return <Message error header={error.message} list={error.cause} />
   }
 
   renderDetails(){
@@ -154,7 +112,6 @@ class ProfilePage extends Component {
     </Form>
   }
   renderTeam(){
-    //return <TeamList user={this.state.profile._id} editor preload/>
     return <TeamTree user={this.state.profile._id}/>
   }
   renderProfile(){
