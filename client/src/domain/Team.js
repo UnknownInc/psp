@@ -2,20 +2,13 @@ import VError from 'verror';
 import APIResource from './APIResource';
 import User from './User';
 import uuidv1 from 'uuid/v1';
-const mongoose = require('mongoose');
-
-const ObjectId = mongoose.Types.ObjectId;
 
 
 const teamService = new APIResource({resourceName:'team'})
 
 export default class Team {
   constructor(data) {
-    if (ObjectId.isValid(data)) {
-      this._id=data;
-    } else {
       this.set(data);
-    }
   }
   
   set({_id, name, children=[], type, user}){
