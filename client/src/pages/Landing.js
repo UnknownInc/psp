@@ -182,10 +182,10 @@ export default class Landing extends Component {
           <Form.Group>
             <Form.Checkbox
               name='iagree'
-              label='I agree to the Terms and Conditions'
               checked={iagree}
               onChange={this.handleCheckboxChange}
               />
+            <label>I agree to the <u>Terms and Conditions.</u></label>
           </Form.Group>
           {this.renderConfirmationBox()}
         </Form>
