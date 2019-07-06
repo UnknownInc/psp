@@ -307,6 +307,12 @@ export default class UserController {
         u.clients = req.body.clients;
       }
 
+      if (req.body.company) {
+        u.company = req.body.company;
+      } else {
+        u.company = user.company._id;
+      }
+
       // details: {type: Object},
 
       await u.save();
