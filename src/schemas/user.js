@@ -7,6 +7,7 @@ const ObjectId = Schema.Types.ObjectId;
 const fields = {
   name: {type: String, default: ''},
   email: {type: String, required: true, unique: true, trim: true, lowercase: true},
+  role: [String],
   tags: [String],
   title: {type: String},
   careerStage: {type: String},

@@ -197,6 +197,17 @@ export default class QuestionController {
       try {
         const result = await QuestionSet
             .findOne({name: 'default', date: (moment().utc().startOf('day'))});
+
+        // const match = await Response.findOne({
+        //   user: user._id,
+        //   date: moment().utc().startOf('day'),
+        //   set: ObjectId(result._id),
+        //   question: ObjectId(result.questions[0]._id),
+        // });
+
+        // if (match) {
+        // }
+
         if (result) {
           return res.json(result.toObject());
         } else {

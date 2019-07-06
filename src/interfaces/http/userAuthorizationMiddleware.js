@@ -31,7 +31,7 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
             try {
               const u=await User.findOne({email: email}).populate('company');
               result=u.toObject();
-              if (u.company.admins.indexOf(u._id)!==-1) {
+              if (u.company && u.company.admins.indexOf(u._id)!==-1) {
                 result.isAdmin=true;
               }
               // set to expire after 1 hour

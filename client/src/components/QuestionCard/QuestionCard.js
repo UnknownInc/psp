@@ -86,7 +86,7 @@ export default class QuestionCard extends Component {
         })
       })
 
-      if (!response.ok) {
+      if (!response.ok && response.status!==403) {
         this.setState({submitted: false, submiting: false})
         return 
       }
