@@ -3,7 +3,6 @@ import React, {Component} from 'react';
 import VError from 'verror';
 
 // import { useDrag, useDrop } from 'react-dnd'
-import 'react-tageditor/dist/style/default.css';
 import { Form, Dropdown, Header, Segment, Table, Icon, Checkbox, Button, Divider, Message, Popup, Modal, Accordion, Menu } from 'semantic-ui-react';
 
 import SemanticDatepicker from 'react-semantic-ui-datepickers';

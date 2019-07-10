@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 
-import 'react-tageditor/dist/style/default.css';
 import { Form, Segment, Table, Icon, Input, Button, Message, Modal, List } from 'semantic-ui-react';
 
 import { getHeaders } from '../../config'
@@ -103,7 +102,7 @@ export default class OptionsEditor extends Component {
             if (options[i]._id===op._id) {
               options[i].name=op.name;
               options.options=op.options;
-              return this.setState({options});
+              return this.setState({options, errorHdr: null, errors:[]});
             }
           }
       }

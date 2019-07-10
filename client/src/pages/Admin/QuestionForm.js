@@ -1,18 +1,6 @@
 import React, {Component} from 'react';
-import TagsEditor from 'react-tageditor';
-
-import 'react-tageditor/dist/style/default.css';
 import { Form, Dropdown, Segment, Icon, Button } from 'semantic-ui-react';
-
-const categories = [
-  {key:"culture", text:"Culture", value:"Culture"},
-  {key:"engagement", text:"Engagement", value:"Engagement"},
-  {key:"leaders", text:"Leaders", value:"Leaders"},
-  {key:"Manager", text:"Manager", value:"Manager"},
-  {key:"not_categorized", text:"Not Categorized", value:"Not Categorized"},
-  {key:"team", text:"Team", value:"Team"},
-  {key:"work_environment", text:"Work Environment", value:"Work Environment"}
-];
+import OptionsDropdown from '../../components/OptionsDropdown';
 
 export default class QuestionForm extends Component {
   constructor(props) {
@@ -23,7 +11,10 @@ export default class QuestionForm extends Component {
       options:[], 
       tags:[],
     }, props.question);
-    this.state={query};
+    this.state={
+      query,
+      tagsOptions:query.tags.map(t=>({ text: t, value:t }))
+    };
   }
 
   handleQuestionChange=event=>{
@@ -42,12 +33,6 @@ export default class QuestionForm extends Component {
   handleCategoryChange = (event,{value}) => {
     const query = {...this.state.query};
     query.category=value;
-    this.setState({query})
-  }
-
-  handleTagsChange = (tagsChanged, allTags) =>{
-    const query = {...this.state.query};
-    query.tags=allTags;
     this.setState({query})
   }
 
@@ -142,7 +127,7 @@ export default class QuestionForm extends Component {
         </Form.Field>
         <Form.Field>
           <label>Category:</label>
-          <Dropdown options={categories} fluid selection value={query.category} onChange={this.handleCategoryChange}/>
+          <OptionsDropdown opname='category'fluid selection value={query.category} onChange={this.handleCategoryChange}/>
         </Form.Field>
         {query.options.map((o,i)=>{
           return <Form.Field key={""+i} inline>
@@ -168,8 +153,26 @@ export default class QuestionForm extends Component {
       <br/><br/>
       <label>
       Tags:
-      <TagsEditor tags={query.tags} delimiters={[","]} placeholder="tags" onChange={this.handleTagsChange}/>
       </label>
+      <Dropdown
+        options={this.state.tagsOptions}
+        placeholder='Choose Tags'
+        search
+        selection
+        fluid
+        multiple
+        allowAdditions
+        value={query.tags}
+        onAddItem={ (e, { value }) => {
+          this.setState(prevState => ({
+            tagsOptions: [{ text: value, value }, ...prevState.tagsOptions],
+          }))
+        }}
+        onChange={(e, { value }) => {
+          const query = {...this.state.query};
+          query.tags=value;
+          this.setState({query})
+        }}/>
       <br/><br/>
       <div>
         <Button onClick={this.handleSubmit}>Update</Button>
