@@ -11,7 +11,6 @@ import Page from '../../components/Page';
 import ResponsiveButton from '../../components/ResponsiveButton';
 import QuestionSetForm from './QuestionSetForm';
 import moment from 'moment';
-
 // import DatePicker from "react-datepicker";
  
 // import "react-datepicker/dist/react-datepicker.css";
@@ -61,6 +60,8 @@ class AdminQuestionsPage extends Component {
       totalUsersCount: 0,
       sortColumn:'question',
       sortDirection:'ascending',
+      tagsFilter:[],
+      tagsOptions:[],
     }
   }
 
@@ -105,6 +106,11 @@ class AdminQuestionsPage extends Component {
       const cf=this.state.categoryFilter?this.state.categoryFilter.trim():'';
       if (cf!=='') {
         url+=`&c=${cf}`
+      }
+
+      const tf=this.state.tagsFilter?this.state.tagsFilter:[];
+      if (tf.length>0){
+        url+=`&t=${tf.join(',')}`;
       }
       const res = await fetch(url , { headers});
 
@@ -462,7 +468,36 @@ class AdminQuestionsPage extends Component {
                   onChange={e=>this.setState({categoryFilter: e.target.value})}/>
                 {/* <Form.Field control={Select} label='Gender' options={options} placeholder='Gender' /> */}
               </Form.Group>
-              <Form.Field control={Button}>Refresh</Form.Field>
+              <Form.Group widths='equal'>
+                <Form.Field>
+                  <label>
+                  Tags:
+                  </label>
+                  <Dropdown
+                    options={this.state.tagsOptions}
+                    placeholder='Choose Tags'
+                    search
+                    selection
+                    fluid
+                    multiple
+                    allowAdditions
+                    value={this.state.tagsFilter}
+                    onAddItem={ (e, { value }) => {
+                      this.setState(prevState => ({
+                        tagsOptions: [{ text: value, value }, ...prevState.tagsOptions],
+                      }))
+                    }}
+                    onChange={(e, { value }) => this.setState({ tagsFilter: value })}/>
+                </Form.Field>
+                
+              </Form.Group>
+              <Form.Group>
+                <Form.Field control={Button}>Refresh</Form.Field>
+                <Form.Field control={Button} onClick={e=>{
+                  e.preventDefault();
+                  this.setState({questionFilter:'', categoryFilter:'', tagsFilter:[]});
+                }}>Clear</Form.Field>
+              </Form.Group>
             </Form>
           }
         }
