@@ -90,9 +90,10 @@ export default class QuestionController {
         query.category=new RegExp(req.query.c, 'i');
       }
       if (req.query.t) {
-        query.tags=new RegExp(req.query.t, 'i');
+        query.tags={'$in': req.query.t.split(',')};
       }
-      const count = await Question.find({query}).estimatedDocumentCount();
+      const count = await Question.where({query}).countDocuments();
+      this.logger.debug(count);
       let mq = Question.find(query);
       if (req.query.sort) {
         mq=mq.sort(req.query.sort);
