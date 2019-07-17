@@ -54,6 +54,7 @@ module.exports = ({config, logger, cache, database,
       buildInfo: {...config.buildInfo},
       cache: {...cache.status},
       db: {...database.status},
+      env: process.env,
     });
   });
 
