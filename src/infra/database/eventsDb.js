@@ -20,25 +20,30 @@ export default class EventsDatabase {
   async connect() {
     this.logger.trace('connect');
     this.logger.debug(`connecting to ${process.env['EVENTS_SERVER']}`);
-    this.sh = shiphold({
-      hostname: process.env['EVENTS_SERVER'],
-      port: process.env['EVENTS_SERVER_PORT'],
-      user: process.env['EVENTS_USER'],
-      password: process.env['EVENTS_PASSWORD'],
-      database: 'psb',
-    });
+    try {
+      this.sh = shiphold({
+        hostname: process.env['EVENTS_SERVER'],
+        port: process.env['EVENTS_SERVER_PORT'],
+        user: process.env['EVENTS_USER'],
+        password: process.env['EVENTS_PASSWORD'],
+        database: 'psb',
+      });
 
-    await this.sh.connect();
+      await this.sh.connect();
 
-    this.Events = this.sh.service({
-      name: 'Events',
-      table: 'users_events',
-    });
+      this.Events = this.sh.service({
+        name: 'Events',
+        table: 'users_events',
+      });
 
-    this.Nodes = this.sh.service({
-      name: 'Nodes',
-      table: 'nodes',
-      primaryKey: 'node_id',
-    });
+      this.Nodes = this.sh.service({
+        name: 'Nodes',
+        table: 'nodes',
+        primaryKey: 'node_id',
+      });
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.debug('env', process.env);
+    }
   }
 }
