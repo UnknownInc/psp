@@ -87,11 +87,14 @@ export default class Team {
     teamService.delete(this);
   }
 
-  static async load({userid, type}){
+  static async load({userid, type, name}){
     try {
       let url = `/?user=${userid}`;
       if (type) {
         url+=`&type=${type}`;
+      }
+      if (name) {
+        url+=`&name=${name}`;
       }
       const {data} = await teamService.fetch(url);
       return data.map(d=>new Team(d));

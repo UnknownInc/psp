@@ -41,6 +41,7 @@ container
 import logger from './infra/logging/logger';
 import Cache from './infra/cache';
 import Database from './infra/database';
+import EventsDatabase from './infra/database/eventsDb';
 import mailer from './infra/mailer';
 // infra
 container
@@ -48,6 +49,7 @@ container
       logger: asFunction(logger).singleton(),
       cache: asClass(Cache).singleton(),
       database: asClass(Database).singleton(),
+      eventsdb: asClass(EventsDatabase).singleton(),
       mailer: asFunction(mailer).singleton(),
     });
 

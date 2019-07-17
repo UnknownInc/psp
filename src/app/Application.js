@@ -6,11 +6,12 @@ export default class Application {
    * Application constructor
    * @param {object} param0
    */
-  constructor({server, database, cache, logger, config}) {
+  constructor({server, database, eventsdb, cache, logger, config}) {
     this.logger = logger('Application');
     this.logger.trace('constructor');
     this.server = server;
     this.database = database;
+    this.eventsdb = eventsdb;
     this.config = config;
     this.cache = cache;
   }
@@ -26,6 +27,9 @@ export default class Application {
     }
     if (this.database) {
       await this.database.connect();
+    }
+    if (this.eventsdb) {
+      await this.eventsdb.connect();
     }
 
     await this.server.start();
