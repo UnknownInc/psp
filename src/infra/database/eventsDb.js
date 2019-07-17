@@ -31,7 +31,7 @@ export default class EventsDatabase {
     this.logger.debug(`connecting to ${process.env['EVENTS_SERVER']}`);
     try {
       this.sh = shiphold({
-        hostname: process.env['EVENTS_SERVER'],
+        host: process.env['EVENTS_SERVER'],
         port: process.env['EVENTS_SERVER_PORT'],
         user: process.env['EVENTS_USER'],
         password: process.env['EVENTS_PASSWORD'],

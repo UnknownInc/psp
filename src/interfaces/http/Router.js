@@ -55,7 +55,6 @@ module.exports = ({config, logger, cache, database, eventsDb,
       cache: {...cache.status},
       db: {...database.status},
       edb: {...eventsDb.status},
-      env: process.env,
     });
   });
 
