@@ -15,6 +15,15 @@ export default class EventsDatabase {
   }
 
   /**
+   * returns the status of the db connection
+   */
+  get status() {
+    return {
+      status: this._status,
+    };
+  }
+
+  /**
    * connect to the database
    */
   async connect() {
@@ -43,7 +52,7 @@ export default class EventsDatabase {
       });
     } catch (err) {
       this.logger.error(err);
-      this.logger.debug('env', process.env);
+      this._status='Connection Failure';
     }
   }
 }
