@@ -76,7 +76,7 @@ export default class TeamController {
     const Node = this.database.Node;
     try {
       const query={user: ObjectId(userid), type: nodeType};
-      if (nodeType!=='Reportees') {
+      if (nodeType!=='Reportees' && nodeType!=='Mentees') {
         query.name=nodeName;
       }
       const matches = await Node.find(query);
@@ -311,16 +311,16 @@ export default class TeamController {
     const Node = this.database.Node;
     const query={user: ObjectId(userid)};
 
-    if (req.query.name) {
-      query.name=name;
-    }
-
     if (req.query.id) {
       query._id=ObjectId(req.query.id);
     }
 
     if (req.query.type) {
       query.type=req.query.type.trim();
+    }
+
+    if (req.query.name) {
+      query.name=req.query.name.trim();
     }
 
     this.logger.debug('getTeams query', query);

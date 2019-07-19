@@ -198,7 +198,7 @@ export default class TeamTree extends Component {
       const newTeam = new Team({
         name: this.state.newTeamName,
         type: this.state.teamType,
-        user: new User({_id:this.props.userid})
+        user: new User({_id:this.props.user})
       })
 
       await newTeam.save();
@@ -302,7 +302,11 @@ export default class TeamTree extends Component {
         getNodeKey: this.getNodeKey,
       }).node;
       console.log(pnode);
-      const teams = await Team.load({userid: user._id, type: pnode.o.type});
+      let tname;
+      if (pnode.o.type==='Community') {
+        tname=pnode.o.name;
+      }
+      const teams = await Team.load({userid: user._id, type: pnode.o.type, name: tname});
 
       node.children = this._getTreeData(teams);
 

@@ -8,8 +8,8 @@ const methodOverride = require('method-override');
 
 // module.exports = ({ config, containerMiddleware,
 // loggerMiddleware, errorHandler, swaggerMiddleware }) => {
-module.exports = ({config, logger, cache, database,
-  containerMiddleware, loggerMiddleware,
+module.exports = ({config, logger, cache, database, eventsdb,
+  containerMiddleware, loggerMiddleware, userAuthorizationMiddleware,
   userController, questionController, teamController,
   optionsController, questionSetController,
 }) => {
@@ -52,8 +52,11 @@ module.exports = ({config, logger, cache, database,
   router.get('/_status', (req, res)=>{
     res.json({
       buildInfo: {...config.buildInfo},
+      service: process.env['K_SERVICE'],
+      revision: process.env['K_REVISION'],
       cache: {...cache.status},
       db: {...database.status},
+      edb: {...eventsdb.status},
     });
   });
 
