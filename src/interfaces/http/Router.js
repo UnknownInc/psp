@@ -9,7 +9,7 @@ const methodOverride = require('method-override');
 // module.exports = ({ config, containerMiddleware,
 // loggerMiddleware, errorHandler, swaggerMiddleware }) => {
 module.exports = ({config, logger, cache, database, eventsdb,
-  containerMiddleware, loggerMiddleware,
+  containerMiddleware, loggerMiddleware, userAuthorizationMiddleware,
   userController, questionController, teamController,
   optionsController, questionSetController,
 }) => {

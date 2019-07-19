@@ -76,7 +76,7 @@ export default class Database {
     this._setupDBEvents();
 
     try {
-      this.logger.debug('DB connecting to ' + uri);
+      this.logger.debug('MONGODB connecting to ' + uri);
       await this.db.openUri(uri, {
         user: process.env['DB_USERNAME'],
         pass: process.env['DB_PASSWORD'],

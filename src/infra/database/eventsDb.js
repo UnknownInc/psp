@@ -39,6 +39,8 @@ export default class EventsDatabase {
       });
 
       await this.sh.connect();
+      this.logger.info(`POSTGRESQL Connected to ${process.env['EVENTS_SERVER']}`);
+      this._status='Ready';
 
       this.Events = this.sh.service({
         name: 'Events',
