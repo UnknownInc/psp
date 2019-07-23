@@ -5,7 +5,11 @@ const mongoose = require('mongoose');
 
 const ObjectId = mongoose.Types.ObjectId;
 
-
+/**
+ * Utility function
+ * @param {*} str
+ * @return {boolean} true is str is null, undefined or empty
+ */
 function IsNullOrEmpty(str) {
   if (str===null) return true;
   if (str===undefined) return true;
@@ -13,8 +17,8 @@ function IsNullOrEmpty(str) {
   return false;
 }
 /**
- * Controller class to handle all user related api's
- * /user/...
+ * Controller class to handle all question related api's
+ * /question/...
  */
 export default class QuestionController {
   /**
@@ -22,11 +26,12 @@ export default class QuestionController {
    * @param {dependencies} logger for logging
    */
   constructor({logger,
-    config, cache, database,
+    config, cache, database, eventsdb,
     userAuthorizationMiddleware}) {
     this.logger = logger('QuestionController');
     this.config = config;
     this.database = database;
+    this.eventsdb = eventsdb;
     this.userAuthorizationMiddleware = userAuthorizationMiddleware;
     this.cache = cache;
 
@@ -135,6 +140,7 @@ export default class QuestionController {
 
     const QuestionSet = this.database.QuestionSet;
     const Response = this.database.Response;
+    const Node = this.database.Node;
 
     try {
       const qs=await QuestionSet.findOne({_id: ObjectId(questionSet)});
@@ -149,9 +155,10 @@ export default class QuestionController {
         return res.sendStatus(404);
       }
 
+      const today=moment().utc();
       const match = await Response.findOne({
         user: user._id,
-        date: moment().utc().startOf('day'),
+        date: today.clone().startOf('day'),
         set: ObjectId(questionSet),
         question: ObjectId(question),
       });
@@ -162,13 +169,55 @@ export default class QuestionController {
 
       const todaysResponse = new Response({
         user: user._id,
-        date: moment().utc().startOf('day'),
+        date: today.clone().startOf('day'),
         set: ObjectId(questionSet),
         question: ObjectId(question),
         response: response,
       });
 
       await todaysResponse.save();
+
+
+      {
+        const q= qs.questions[0];
+        const category =q.category;
+        let resIdx=0;
+        const value=0;
+        let edata={};
+        const groups={};
+        switch (response.toLowerCase()) {
+          case 'a': resIdx=0; break;
+          case 'b': resIdx=1; break; // 80
+          case 'c': resIdx=2; break; // 60
+          case 'd': resIdx=3; break; // 40
+          case 'e': resIdx=4; break; // 20
+          default:
+            resIdx=q.options.length;
+            break;
+        }
+        const responseValue=(1- (resIdx/q.options.length))*100;
+        edata.response=response;
+
+        let parents = await Node.find({children: {'$in': user._id}, type: 'Reportees'});
+        groups.reportees = parents.map((n)=>`'${n.user}'`);
+        parents = await Node.find({children: {'$in': user._id}, type: 'Mentees'});
+        groups.mentees = parents.map((n)=>`'${n.user}'`);
+        parents = await Node.find({children: {'$in': user._id}, type: 'ProjectTeam'});
+        groups.projectteam = parents.map((n)=>`'${n.user}'`);
+
+        edata = JSON.stringify(edata);
+        const iquery = `
+          INSERT INTO events ("source_id", "groups", "event_type", "event_ref",
+          "time", "event_data", "value", "category")
+          VALUES 
+          ('${user._id.toString()}', '${JSON.stringify(groups)}', 'q', 
+            '${questionSet}','${today.format('YYYY-MM-DD hh:mm:ss')}', 
+            '${edata}','${responseValue}','${category}')
+          ON CONFLICT DO NOTHING;
+        `;
+        // this.logger.debug(iquery);
+        this.eventsdb.sh.query(iquery);
+      }
 
       return res.sendStatus(200);
     } catch (err) {
