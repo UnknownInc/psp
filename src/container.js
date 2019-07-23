@@ -41,7 +41,7 @@ container
 import logger from './infra/logging/logger';
 import Cache from './infra/cache';
 import Database from './infra/database';
-import EventsDatabase from './infra/database/eventsdb';
+import EventsDatabase from './infra/database/events';
 import mailer from './infra/mailer';
 // infra
 container
