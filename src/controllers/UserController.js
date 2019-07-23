@@ -265,6 +265,13 @@ export default class UserController {
         });
       }
 
+      const eparts = getEmailParts(req.body.email);
+      if (!eparts.isValid) {
+        return res.status(400).json({
+          error: 'Inavlid email: '+req.body.email,
+        });
+      }
+
       const u = new User({email: req.body.email});
 
       if (req.body.name) {
