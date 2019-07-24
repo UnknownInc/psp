@@ -203,6 +203,25 @@ class AdminUsersPage extends Component {
     }
   }
 
+  _addToTeams = async (user)=>{
+    user.teams.forEach(async (tm)=>{
+      let lu = await User.getByEmail(tm.lead);
+      if (!lu) {
+        lu=new User({email: tm.lead})
+        await lu.save();
+      }
+
+      let lteams = await Team.load({userid: lu._id, type: tm.type})
+      // eslint-disable-next-line no-loop-func
+      let tteam=lteams.filter((lt)=>(lt.name===tm.name))[0];
+      if (!tteam) {
+        tteam=new Team({name: tm.name, user: lu.toObject(), type:  tm.type})
+        await tteam.save();
+      }
+      await tteam.addMember(user.email);
+    });
+  }
+
   handleSaveChanges = async ()=>{
     let error=null;
     let users=[...this.state.users];
@@ -217,39 +236,51 @@ class AdminUsersPage extends Component {
       updateInfo.total = nusers.length;
 
       do {
-        let u = await User.getByEmail(nusers[i].email);
-        if (!u) {
-          u= new User(nusers[i]);
-        } else {
-          u.set({...nusers[i], _id: u._id});
-        }
-        let idx=users.findIndex(usr=>usr._id===u._id);
-        await u.save()
+        let idx=0;
+        try {
+          let u = await User.getByEmail(nusers[i].email);
+          if (!u) {
+            u= new User(nusers[i]);
+          } else {
+            u.set({...nusers[i], _id: u._id});
+          }
+          idx=users.findIndex(usr=>usr._id===u._id);
+          await u.save()
 
-        //create teams
-        let t=0;
-        while(t<nusers[i].teams.length) {
-          let lu = await User.getByEmail(nusers[i].teams[t].lead);
-          if (!lu) {
-            lu=new User({email: nusers[i].teams[t].lead})
-            await lu.save();
+          //create teams
+          // let t=0;
+          // while(t<nusers[i].teams.length) {
+          //   let lu = await User.getByEmail(nusers[i].teams[t].lead);
+          //   if (!lu) {
+          //     lu=new User({email: nusers[i].teams[t].lead})
+          //     await lu.save();
+          //   }
+
+          //   let lteams = await Team.load({userid: lu._id, type: nusers[i].teams[t].type})
+          //   // eslint-disable-next-line no-loop-func
+          //   let tteam=lteams.filter((lt)=>(lt.name===nusers[i].teams[t].name))[0];
+          //   if (!tteam) {
+          //     tteam=new Team({name: nusers[i].teams[t].name, user: lu.toObject(), type:  nusers[i].teams[t].type})
+          //     await tteam.save();
+          //   }
+          //   await tteam.addMember(u.email);
+          //   t++;
+          // }
+          try {
+            await this._addToTeams(nusers[i]);
+          } catch(ex) {
+            console.error('Unable to add teams to the user', ex);
           }
 
-          let lteams = await Team.load({userid: lu._id, type: nusers[i].teams[t].type})
-          // eslint-disable-next-line no-loop-func
-          let tteam=lteams.filter((lt)=>(lt.name===nusers[i].teams[t].name))[0];
-          if (!tteam) {
-            tteam=new Team({name: nusers[i].teams[t].name, user: lu.toObject(), type:  nusers[i].teams[t].type})
-            await tteam.save();
-          }
-          await tteam.addMember(u.email);
-          t++;
+          users[idx]=u.toObject();
         }
-
-        users[idx]=u.toObject();
-        i+=1;
-        updateInfo.current=i;
-        this.setState({updateInfo, users})
+        catch(ex) {
+          users[idx].hasError=true;
+        } finally {
+          i+=1;
+          updateInfo.current=i;
+          this.setState({updateInfo, users})
+        }
       } while(i<updateInfo.total)
     } catch (err) {
         console.error(err);
