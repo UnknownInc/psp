@@ -199,11 +199,11 @@ export default class QuestionController {
         edata.response=response;
 
         let parents = await Node.find({children: {'$in': user._id}, type: 'Reportees'});
-        groups.reportees = parents.map((n)=>`'${n.user}'`);
+        groups.reportees = parents.map((n)=>`${n.user}`);
         parents = await Node.find({children: {'$in': user._id}, type: 'Mentees'});
-        groups.mentees = parents.map((n)=>`'${n.user}'`);
+        groups.mentees = parents.map((n)=>`${n.user}`);
         parents = await Node.find({children: {'$in': user._id}, type: 'ProjectTeam'});
-        groups.projectteam = parents.map((n)=>`'${n.user}'`);
+        groups.projectteam = parents.map((n)=>`${n.user}`);
 
         edata = JSON.stringify(edata);
         const iquery = `
@@ -215,7 +215,7 @@ export default class QuestionController {
             '${edata}','${responseValue}','${category}')
           ON CONFLICT DO NOTHING;
         `;
-        // this.logger.debug(iquery);
+        this.logger.info(iquery);
         this.eventsdb.sh.query(iquery);
       }
 
