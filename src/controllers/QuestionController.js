@@ -182,7 +182,6 @@ export default class QuestionController {
         const q= qs.questions[0];
         const category =q.category;
         let resIdx=0;
-        const value=0;
         let edata={};
         const groups={};
         switch (response.toLowerCase()) {
@@ -215,7 +214,7 @@ export default class QuestionController {
             '${edata}','${responseValue}','${category}')
           ON CONFLICT DO NOTHING;
         `;
-        this.logger.info(iquery);
+        //this.logger.info(iquery);
         this.eventsdb.sh.query(iquery);
       }
 
