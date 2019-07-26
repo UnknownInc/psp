@@ -43,7 +43,9 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
           } else {
             result = JSON.parse(result);
           }
+          result.roles=result.roles||[];
           req.user = result;
+          req.user.isInRole=(role)=>(result.roles.indexOf(role)!=-1);
           next();
         });
       });
