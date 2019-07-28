@@ -72,31 +72,31 @@ class ReportsPage extends Component {
     return values;
   }
   handleFilterChange = async ()=>{
-    // const {selectedInterval}=this.state;
-    // if (true){
-    //   this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
-    //   setTimeout(()=>{
-    //     const summary={ aggregates:{category:[], top:[], bottom:[]}};
-    //     const categoryAggregates=[
-    //       {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
-    //       {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-    //       {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-    //       {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
-    //     ]
-    //     summary.aggregates.category=categoryAggregates;
-    //     summary.aggregates.top=[
-    //       {question:"Do your teammates know how to keep Sapient & Sapient's Clients intellectual property and data safe?", category:'Work Environment', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 3.6}},
-    //       {question:"Do you find your work to be a positive challenge?", category:'Engagement', date:new Date(2019,0,23), data:{companyAvg:4.0, average: 3.9}},
-    //       {question:"Does working at Sapient motivate you to exceed expectations at work?", category:'Culture', date:new Date(2019,2,1), data:{companyAvg:3.8, average: 3.6}},
-    //     ]
-    //     summary.aggregates.bottom=[
-    //       {question:"Are you planning on looking for a new job in the near future?", category:'Engagement', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 2.8}},
-    //       {question:"How often do you get to decide the best way to get your work done?", category:'Manager', date:new Date(2019,0,23), data:{companyAvg:3.4, average: 2.0}},
-    //       {question:"When my leader delivers feedback, they first seek to understand.", category:'Leaders', date:new Date(2019,0,5), data:{companyAvg:3.7, average: 2.1}},
-    //     ]
-    //     this.setState({filtering: false, summary})
-    //   }, 1000)
-    // }
+    const {selectedInterval}=this.state;
+    if (true){
+      this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
+      setTimeout(()=>{
+        const summary={ aggregates:{category:[], top:[], bottom:[]}};
+        const categoryAggregates=[
+          {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
+          {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+          {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+          {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
+        ]
+        summary.aggregates.category=categoryAggregates;
+        summary.aggregates.top=[
+          {question:"Do your teammates know how to keep Sapient & Sapient's Clients intellectual property and data safe?", category:'Work Environment', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 3.6}},
+          {question:"Do you find your work to be a positive challenge?", category:'Engagement', date:new Date(2019,0,23), data:{companyAvg:4.0, average: 3.9}},
+          {question:"Does working at Sapient motivate you to exceed expectations at work?", category:'Culture', date:new Date(2019,2,1), data:{companyAvg:3.8, average: 3.6}},
+        ]
+        summary.aggregates.bottom=[
+          {question:"Are you planning on looking for a new job in the near future?", category:'Engagement', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 2.8}},
+          {question:"How often do you get to decide the best way to get your work done?", category:'Manager', date:new Date(2019,0,23), data:{companyAvg:3.4, average: 2.0}},
+          {question:"When my leader delivers feedback, they first seek to understand.", category:'Leaders', date:new Date(2019,0,5), data:{companyAvg:3.7, average: 2.1}},
+        ]
+        this.setState({filtering: false, summary})
+      }, 1000)
+    }
   }
 
   handleTeamSelection=(e,data)=>{

@@ -11,6 +11,7 @@ import Landing from './pages/Landing'
 import Admin,{AdminQuestions, AdminUsers, AdminSettings} from './pages/Admin'
 import ProfilePage from './pages/Profile';
 import ReportsPage from './pages/Reports';
+import DashboardPage from './pages/Dashboard';
 import './App.css';
 import { Menu, Icon, Dropdown, Image } from 'semantic-ui-react';
 import LoginSwitch from './components/LoginSwitch';
@@ -95,6 +96,7 @@ class App extends Component {
             <Switch>
               <Route exact path='/verify/:id' component={Confirm} />
               <Route exact path='/profile' component={ProfilePage} />
+              <Route exact path='/dashboard' component={DashboardPage} />
               <Route exact path='/reports' component={ReportsPage} />
               <Route exact path='/admin/settings' component={AdminSettings} />
               <Route exact path='/admin/users' component={AdminUsers} />

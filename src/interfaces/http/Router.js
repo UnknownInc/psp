@@ -11,7 +11,7 @@ const methodOverride = require('method-override');
 module.exports = ({config, logger, cache, database, eventsdb,
   containerMiddleware, loggerMiddleware, userAuthorizationMiddleware,
   userController, questionController, teamController,
-  optionsController, questionSetController,
+  optionsController, questionSetController, dataController,
 }) => {
   const log=logger('Router');
   log.trace('setup');
@@ -46,6 +46,7 @@ module.exports = ({config, logger, cache, database, eventsdb,
   apiRouter.use('/questionset', questionSetController.router);
   apiRouter.use('/team', teamController.router);
   apiRouter.use('/options', optionsController.router);
+  apiRouter.use('/data', dataController.router);
 
   router.get('/ping', (req, res)=> res.send('pong'));
 
