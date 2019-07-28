@@ -141,6 +141,7 @@ class AdminUsersPage extends Component {
         const clients = data['CLIENT_NAME']? [data['CLIENT_NAME']]:[];
         const industry = data['Industry']||'';
         const capability = data['Capability']||'';
+        const skills=data['Skills']?[data['Skills']]:[];
         const newUser= {
           _id, 
           email,
@@ -150,6 +151,7 @@ class AdminUsersPage extends Component {
           clients,
           industry,
           capability,
+          skills,
           oid,
           teams:[]
         }
@@ -174,6 +176,7 @@ class AdminUsersPage extends Component {
           users[idx].oid = newUser.oid||users[idx].oid;
 
           users[idx].clients = [...(new Set([...users[idx].clients||[], ...newUser.clients]))];
+          users[idx].skills = [...(new Set([...users[idx].skills||[], ...newUser.skills]))];
           users[idx].teams=newUser.teams;
           users[idx].isModified=true;
         }
