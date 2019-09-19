@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import Page from '../../components/Page';
 import moment from 'moment';
 import VError from 'verror';
-import { Container, Message } from 'semantic-ui-react';
+import { Container, Message, Statistic, Icon } from 'semantic-ui-react';
 import RowCalendarPlot from '../../components/RowCalendarPlot';
 import DivergingStackedBarPlot from '../../components/DivergingStackedBarPlot';
 
@@ -23,8 +23,9 @@ export default class DashboardPage extends Component {
   async componentDidMount(){
     const responseRates=[];
     const questionHistory=[];
-    let day=moment().startOf('year').add(1,'day');
+    let usersSummary={};
     const today=moment();
+    let day=today.startOf('year').add(1,'day');
 
     // do{
     //   responseRates.push({date:day.toDate(), value:(Math.random())});
@@ -32,6 +33,9 @@ export default class DashboardPage extends Component {
     // } while(day.isBefore(today))
 
     try {
+      usersSummary = await Data.getUserSummary();
+      console.log(usersSummary);
+
       const data = await Data.getQuestionsSummary({startDate:day});
       data.forEach(r=>{
         const dt =  moment.utc(r.day);
@@ -81,7 +85,7 @@ export default class DashboardPage extends Component {
     //     Label: `Question ${i}`
     //   })
     // }
-    this.setState({responseRates, questionHistory});
+    this.setState({responseRates, questionHistory, usersSummary});
   }
 
   renderError() {
@@ -98,6 +102,13 @@ export default class DashboardPage extends Component {
         {this.renderError()}
         <span style={{fontSize: "1.5em"}}>Reponse Percentage:</span>
         <RowCalendarPlot data={this.state.responseRates}/>
+        <br/>
+        <Statistic.Group>
+          <Statistic>
+            <Statistic.Label>Registered Users</Statistic.Label>
+            <Statistic.Value><Icon name='user'/> {this.state.usersSummary?this.state.usersSummary.registeredUsers:null}</Statistic.Value>
+          </Statistic>
+        </Statistic.Group>
         <br/>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
         <DivergingStackedBarPlot data={this.state.questionHistory}/>

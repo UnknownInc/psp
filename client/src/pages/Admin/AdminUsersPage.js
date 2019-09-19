@@ -155,6 +155,10 @@ class AdminUsersPage extends Component {
           oid,
           teams:[]
         }
+        if (data['Communities']){
+          let com=data['Communities'].split(',');
+          
+        }
         if (data['Project Team'] && data['Project Team Lead Email']) {
           newUser.teams.push({type:'ProjectTeam', lead:data['Project Team Lead Email'], name:data['Project Team']})
         }

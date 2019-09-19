@@ -19,6 +19,8 @@ export default class DataController {
     this.uacheck = userAuthorizationMiddleware;
 
     this.getSummary = this.getSummary.bind(this);
+    this.getQuestionsSummary = this.getQuestionsSummary.bind(this);
+    this.getUsersSummary = this.getUsersSummary.bind(this);
   }
 
   /**
@@ -39,7 +41,28 @@ export default class DataController {
    * @return {any} json response
    */
   async getSummary(req, res) {
-    this.logger.trace('getOption');
+    this.logger.trace('getSummary');
+    const eventType = req.params.eventType.toLowerCase();
+    switch (eventType) {
+      case 'q':
+        return this.getQuestionsSummary(req, res);
+      case 'u':
+        return this.getUsersSummary(req, res);
+      default:
+        return res.status(400).json({
+          error: `Bad value for event type: ${req.params.eventType}`,
+        });
+    }
+  }
+
+  /**
+   * Handle the  summary request
+   * @param {express.request} req
+   * @param {express.response} res
+   * @return {any} json response
+   */
+  async getQuestionsSummary(req, res) {
+    this.logger.trace('getQuestionsSummary');
     try {
       const user = req.user;
       if (!user) {
@@ -99,6 +122,56 @@ export default class DataController {
       this.logger.error(err);
       return res.status(500).json({
         error: 'Unable to return summary',
+      });
+    }
+  }
+
+  /**
+   * Handle the  summary request
+   * @param {express.request} req
+   * @param {express.response} res
+   * @return {any} json response
+   */
+  async getUsersSummary(req, res) {
+    this.logger.trace('getUsersSummary');
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({
+          error: 'Unknown user',
+        });
+      }
+      if (user.isInRole('dashboard')===false) {
+        return res.status(403).json({
+          error: 'Need dashboard access',
+        });
+      }
+
+      const eventType = req.params.eventType.toLowerCase();
+      if (eventType!=='u') {
+        return res.status(400).json({
+          error: `Bad value for event type: ${req.params.eventType}`,
+        });
+      }
+
+      // let startDate;
+      // if (req.query.startDate) {
+      //   if (moment(req.query.startDate).isValid()===false) {
+      //     return res.status(400).json({
+      //       error: `Bad value for startDate: ${req.query.startDate}`,
+      //     });
+      //   }
+      //   startDate = moment(req.query.startDate).format('YYYY-MM-DD');
+      // }
+
+      const User = this.database.User;
+
+      const registeredUsers = await User.count({isVerified: true});
+      return res.json({registeredUsers});
+    } catch (err) {
+      this.logger.error(err);
+      return res.status(500).json({
+        error: 'Unable to return users summary',
       });
     }
   }
