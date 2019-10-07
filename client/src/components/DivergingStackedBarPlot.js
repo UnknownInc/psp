@@ -17,7 +17,7 @@ export default class DivergingStackedBarPlot extends Component {
   }
 
   draw(props) {
-    var margin = props.margin || {top: 50, right: 20, bottom: 10, left: 65},
+    var margin = props.margin || {top: 50, right: 100, bottom: 10, left: 65},
     width = this.container.current.offsetWidth - margin.left - margin.right,
     height = (props.height||500) - margin.top - margin.bottom;
 
@@ -60,7 +60,7 @@ export default class DivergingStackedBarPlot extends Component {
         var idx = 0;
         d.boxes = color.domain().map(function(name) { 
           const op=d.options[idx];
-          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx += 1]}; 
+          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx += 1], avg: d.avg}; 
         });
       });
 
@@ -120,6 +120,43 @@ export default class DivergingStackedBarPlot extends Component {
           .attr("class", function(d,index) { return index%2===0 ? "even" : "odd"; })
         .append('title')
           .text(function(d){return d.text});
+      
+      vakken.append("ellipse")
+        .attr("ry", y.bandwidth()/2)
+        .attr("rx",15)
+        .attr("cx", width+15)
+        .attr("cy",y.bandwidth()/2)
+        .attr("fill-opacity", "0.5")
+        .style("fill", "#fff")
+        .style("stroke-width","2")
+        .style("stroke",function(d){
+          if (d.avg>=0.80) {
+            return "#079FFF";
+          } else if (d.avg>=0.60) {
+            return "#00e6c3";
+          } else if (d.avg>=0.40) {
+            return "#b4b4b4";
+          } else if (d.avg>=0.20) {
+            return "#FFE63B";
+          } 
+          return "#fe414d";
+        })
+      .append('title')
+        .text(function(d){return d.N});
+      
+      vakken.append("text")
+          .attr("x", width+15)
+          .attr("y", y.bandwidth()/2+4)
+          .attr("text-anchor","middle")
+          .style("font", "10px sans-serif")
+          .text(function(d) { return Math.round(d.avg*100)+'%'});
+      vakken.append("text")
+          .attr("x", width+35)
+          .attr("y", y.bandwidth()/2+4)
+          .attr("text-anchor","middle")
+          .style("font", "10px sans-serif")
+          .text(function(d) { return d.N});
+
 
       svg.append("g")
           .attr("class", "y axis")

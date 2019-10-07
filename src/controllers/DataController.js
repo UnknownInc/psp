@@ -166,7 +166,7 @@ export default class DataController {
 
       const User = this.database.User;
 
-      const registeredUsers = await User.count({isVerified: true});
+      const registeredUsers = await User.countDocuments({isVerified: true});
       return res.json({registeredUsers});
     } catch (err) {
       this.logger.error(err);
