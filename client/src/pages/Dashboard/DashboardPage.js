@@ -39,9 +39,11 @@ export default class DashboardPage extends Component {
       const data = await Data.getQuestionsSummary({startDate:day});
       data.forEach(r=>{
         const dt =  moment.utc(r.day);
+        const N=parseInt(r.count);
+        const avg=r.average/100.0;
         responseRates.push({
           date:dt.toDate(),
-          value: (r.average/100.0)
+          value: avg
         })
 
         questionHistory.push({
@@ -50,7 +52,8 @@ export default class DashboardPage extends Component {
           3: r.dist[2],
           4: r.dist[3],
           5: r.dist[4],
-          N: parseInt(r.count),
+          N: N,
+          avg:avg,
           Label: `${dt.format('YYYY-MM-DD')}`,
           text: r.questionset.questions[0].question,
           options: r.questionset.questions[0].options.reverse(),
@@ -111,7 +114,7 @@ export default class DashboardPage extends Component {
         </Statistic.Group>
         <br/>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
-        <DivergingStackedBarPlot data={this.state.questionHistory}/>
+        <DivergingStackedBarPlot data={this.state.questionHistory} height={this.state.questionHistory.length*50}/>
       </Container>
     </Page>
   }
