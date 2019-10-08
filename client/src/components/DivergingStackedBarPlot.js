@@ -19,7 +19,7 @@ export default class DivergingStackedBarPlot extends Component {
   draw(props) {
     var margin = props.margin || {top: 50, right: 100, bottom: 10, left: 65},
     width = this.container.current.offsetWidth - margin.left - margin.right,
-    height = (props.height||500) - margin.top - margin.bottom;
+    height = (props.height||560) - margin.top - margin.bottom;
 
     var y = d3.scaleBand()
       .rangeRound([0, height])
@@ -122,7 +122,7 @@ export default class DivergingStackedBarPlot extends Component {
           .text(function(d){return d.text});
       
       vakken.append("ellipse")
-        .attr("ry", y.bandwidth()/2)
+        .attr("ry", 15)
         .attr("rx",15)
         .attr("cx", width+15)
         .attr("cy",y.bandwidth()/2)
