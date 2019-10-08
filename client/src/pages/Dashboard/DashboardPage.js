@@ -3,10 +3,11 @@ import React, {Component} from 'react';
 import Page from '../../components/Page';
 import moment from 'moment';
 import VError from 'verror';
-import { Container, Message, Statistic, Icon } from 'semantic-ui-react';
+import { Container, Message, Statistic, Icon, Button } from 'semantic-ui-react';
 import RowCalendarPlot from '../../components/RowCalendarPlot';
 import DivergingStackedBarPlot from '../../components/DivergingStackedBarPlot';
 
+import { QUESTIONS_API, getHeaders } from '../../config'
 import Data from '../../domain/Data';
 
 export default class DashboardPage extends Component {
@@ -113,8 +114,23 @@ export default class DashboardPage extends Component {
           </Statistic>
         </Statistic.Group>
         <br/>
+        <Button onClick={async ()=>{
+          
+            try {
+              const headers=getHeaders();
+              headers["Content-type"] = "application/json";
+              const response = await fetch(`/api/question/replay`, {
+                headers,
+                method: 'POST',
+                body:JSON.stringify({
+                })
+              })
+            } catch (ex) {
+              console.log(ex);
+            }
+        }}>Replay</Button>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
-        <DivergingStackedBarPlot data={this.state.questionHistory} height={this.state.questionHistory.length*50}/>
+        <DivergingStackedBarPlot data={this.state.questionHistory} height={Math.max(300,this.state.questionHistory.length*50+60)}/>
       </Container>
     </Page>
   }

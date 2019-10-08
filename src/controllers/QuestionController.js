@@ -40,6 +40,9 @@ export default class QuestionController {
     this.addQuestions = this.addQuestions.bind(this);
     this.updateQuestions = this.updateQuestions.bind(this);
     this.submitResponse = this.submitResponse.bind(this);
+    this.replayEvents = this.replayEvents.bind(this);
+
+    this._addQEvent = this._addQEvent.bind(this);
   }
 
   /**
@@ -54,6 +57,7 @@ export default class QuestionController {
     router.put('/', this.updateQuestions);
     router.post('/', this.addQuestions);
     router.post('/submit', this.submitResponse);
+    router.post('/replay', this.replayEvents);
     return router;
   }
 
@@ -132,6 +136,7 @@ export default class QuestionController {
     }
 
     const {questionSet, question, response} = req.body;
+    const rdate = req.body.date? moment(req.body.date).utc():moment().utc();
     if (IsNullOrEmpty(questionSet) ||
           IsNullOrEmpty(question) || IsNullOrEmpty(response)) {
       this.logger.warn('bad submittion', req.body);
@@ -140,7 +145,6 @@ export default class QuestionController {
 
     const QuestionSet = this.database.QuestionSet;
     const Response = this.database.Response;
-    const Node = this.database.Node;
 
     try {
       const qs=await QuestionSet.findOne({_id: ObjectId(questionSet)});
@@ -155,74 +159,125 @@ export default class QuestionController {
         return res.sendStatus(404);
       }
 
-      const today=moment().utc();
       const match = await Response.findOne({
         user: user._id,
-        date: today.clone().startOf('day'),
+        date: rdate.clone().startOf('day'),
         set: ObjectId(questionSet),
         question: ObjectId(question),
       });
 
       if (match) {
         return res.sendStatus(403);
+      } else {
+        const todaysResponse = new Response({
+          user: user._id,
+          date: rdate.clone().startOf('day'),
+          set: ObjectId(questionSet),
+          question: ObjectId(question),
+          response: response,
+        });
+
+        await todaysResponse.save();
       }
 
-      const todaysResponse = new Response({
-        user: user._id,
-        date: today.clone().startOf('day'),
-        set: ObjectId(questionSet),
-        question: ObjectId(question),
-        response: response,
-      });
 
-      await todaysResponse.save();
-
-
-      {
-        const q= qs.questions[0];
-        const category =q.category;
-        let resIdx=0;
-        let edata={};
-        const groups={};
-        switch (response.toLowerCase()) {
-          case 'a': resIdx=0; break;
-          case 'b': resIdx=1; break; // 80
-          case 'c': resIdx=2; break; // 60
-          case 'd': resIdx=3; break; // 40
-          case 'e': resIdx=4; break; // 20
-          default:
-            resIdx=q.options.length;
-            break;
-        }
-        const responseValue=(1- (resIdx/q.options.length))*100;
-        edata.response=response;
-
-        let parents = await Node.find({children: {'$in': user._id}, type: 'Reportees'});
-        groups.reportees = parents.map((n)=>`${n.user}`);
-        parents = await Node.find({children: {'$in': user._id}, type: 'Mentees'});
-        groups.mentees = parents.map((n)=>`${n.user}`);
-        parents = await Node.find({children: {'$in': user._id}, type: 'ProjectTeam'});
-        groups.projectteam = parents.map((n)=>`${n.user}`);
-
-        edata = JSON.stringify(edata);
-        const iquery = `
-          INSERT INTO events ("source_id", "groups", "event_type", "event_ref",
-          "time", "event_data", "value", "category")
-          VALUES 
-          ('${user._id.toString()}', '${JSON.stringify(groups)}', 'q', 
-            '${questionSet}','${today.format('YYYY-MM-DD hh:mm:ss')}', 
-            '${edata}','${responseValue}','${category}')
-          ON CONFLICT DO NOTHING;
-        `;
-        //this.logger.info(iquery);
-        this.eventsdb.sh.query(iquery);
-      }
+      await this._addQEvent(qs, response, user._id, rdate);
 
       return res.sendStatus(200);
     } catch (err) {
       this.logger.error(err);
       return res.sendStatus(500);
     }
+  }
+  /**
+   * replay events
+   * @param {*} req
+   * @param {*} res
+   */
+  async replayEvents(req, res) {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({
+        error: 'Not authorized',
+      });
+    }
+
+    const QuestionSet = this.database.QuestionSet;
+    const Response = this.database.Response;
+    try {
+      const allRes=await Response.find({});
+      let count=allRes.length;
+      allRes.forEach(async (r)=>{
+        const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
+        await this._addQEvent(qs, r.response, r.user, moment(r.date));
+        count--;
+        if (count==0) {
+          return res.sendStatus(200);
+        }
+      });
+    } catch (err) {
+      this.logger.error(err);
+      return res.sendStatus(500);
+    }
+  }
+
+  /**
+   * add question answer events to events table
+   * @param {questionSet} qs
+   * @param {string} response response for the question, (option selected)
+   * @param {ObjectId} userid
+   * @param {moment} rdate
+   */
+  async _addQEvent(qs, response, userid, rdate) {
+    const q = qs.questions[0];
+    const category = q.category;
+    let resIdx=0;
+    switch (response.toLowerCase()) {
+      case 'a': resIdx=0; break;
+      case 'b': resIdx=1; break; // 80
+      case 'c': resIdx=2; break; // 60
+      case 'd': resIdx=3; break; // 40
+      case 'e': resIdx=4; break; // 20
+      default:
+        resIdx=q.options.length;
+        break;
+    }
+    const responseValue=(1- (resIdx/q.options.length))*100;
+
+    let edata={};
+    edata.response=response;
+    edata = JSON.stringify(edata);
+
+    const Node = this.database.Node;
+
+    const groups={};
+    let parents = await Node.find({children: {'$in': userid}, type: 'Reportees'});
+    groups.reportees = parents.map((n)=>`${n.user}`);
+
+    parents = await Node.find({children: {'$in': userid}, type: 'Mentees'});
+    groups.mentees = parents.map((n)=>`${n.user}`);
+    
+    parents = await Node.find({children: {'$in': userid}, type: 'ProjectTeam'});
+    groups.projectteam = parents.map((n)=>`${n.user}`);
+
+    const iquery = `
+      INSERT INTO events ("source_id", "groups", "event_type", "event_ref",
+      "time", "event_data", "value", "category")
+      VALUES 
+      ('${userid.toString()}', '${JSON.stringify(groups)}', 'q', 
+        '${qs._id.toString()}','${rdate.format('YYYY-MM-DD hh:mm:ss')}', 
+        '${edata}','${responseValue}','${category}')
+      ON CONFLICT DO NOTHING;
+    `;
+    // this.logger.info(iquery);
+    this.eventsdb.sh.query(iquery);
   }
 
   /**

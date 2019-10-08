@@ -82,7 +82,8 @@ export default class QuestionCard extends Component {
         body:JSON.stringify({
           questionSet:this.state.qs._id,
           question:this.state.query._id,
-          response: option
+          response: option,
+          date: moment().toISOString(true)
         })
       })
 
