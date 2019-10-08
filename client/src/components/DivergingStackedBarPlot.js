@@ -128,7 +128,7 @@ export default class DivergingStackedBarPlot extends Component {
         .attr("cy",y.bandwidth()/2)
         .attr("fill-opacity", "0.5")
         .style("fill", "#fff")
-        .style("stroke-width","2")
+        .style("stroke-width","4")
         .style("stroke",function(d){
           if (d.avg>=0.80) {
             return "#079FFF";

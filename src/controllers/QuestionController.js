@@ -216,7 +216,8 @@ export default class QuestionController {
       allRes.forEach(async (r)=>{
         const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
         await this._addQEvent(qs, r.response, r.user, moment(r.date));
-      })
+      });
+      return res.sendStatus(200);
     } catch (err) {
       this.logger.error(err);
       return res.sendStatus(500);
