@@ -136,7 +136,7 @@ export default class QuestionController {
     }
 
     const {questionSet, question, response} = req.body;
-    const rdate = req.body.date? moment(req.body.date).utc():moment().utc();
+    let rdate = req.body.date? moment(req.body.date).utc():moment().utc();
     if (IsNullOrEmpty(questionSet) ||
           IsNullOrEmpty(question) || IsNullOrEmpty(response)) {
       this.logger.warn('bad submittion', req.body);
@@ -157,6 +157,10 @@ export default class QuestionController {
       if ( qs.questions[0]._id.toString() !== question) {
         this.logger.trace(qs);
         return res.sendStatus(404);
+      }
+
+      if (moment(qs.date).dayOfYear()!=rdate.dayOfYear()) {
+        rdate=moment(qs.date);
       }
 
       const match = await Response.findOne({
@@ -216,7 +220,11 @@ export default class QuestionController {
       let count=allRes.length;
       allRes.forEach(async (r)=>{
         const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
-        await this._addQEvent(qs, r.response, r.user, moment(r.date));
+        let rdate=moment(r.date);
+        if (rdate.dayOfYear()!=moment(qs.date).dayOfYear()) {
+          rdate=moment(qs.date);
+        }
+        await this._addQEvent(qs, r.response, r.user, rdate);
         count--;
         if (count==0) {
           return res.sendStatus(200);
