@@ -3,7 +3,10 @@ import React, {Component} from 'react';
 import Page from '../../components/Page';
 import moment from 'moment';
 import VError from 'verror';
-import { Container, Message, Statistic, Icon, Button } from 'semantic-ui-react';
+import { Container, Message, Statistic, Icon, Button, Segment, Popup, Form } from 'semantic-ui-react';
+import { DateRangePicker, SingleDatePicker, DayPickerRangeController } from 'react-dates';
+
+import OptionsDropdown from '../../components/OptionsDropdown';
 import RowCalendarPlot from '../../components/RowCalendarPlot';
 import DivergingStackedBarPlot from '../../components/DivergingStackedBarPlot';
 
@@ -15,6 +18,9 @@ export default class DashboardPage extends Component {
     super(props);
     this.state={
       loading: false,
+      startDate:moment().subtract(90,'d'),
+      endDate:moment(),
+      focusedInput:null,
       responseRates:[
       ],
       questionHistory:[],
@@ -22,22 +28,19 @@ export default class DashboardPage extends Component {
   }
 
   async componentDidMount(){
+    await this.refreshData();
+  }
+
+  async refreshData(){
     const responseRates=[];
     const questionHistory=[];
     let usersSummary={};
-    const today=moment();
-    let day=today.startOf('year').add(1,'day');
-
-    // do{
-    //   responseRates.push({date:day.toDate(), value:(Math.random())});
-    //   day=day.add(1, 'day');
-    // } while(day.isBefore(today))
 
     try {
       usersSummary = await Data.getUserSummary();
       console.log(usersSummary);
 
-      const data = await Data.getQuestionsSummary({startDate:day});
+      const data = await Data.getQuestionsSummary({startDate:this.state.startDate, endDate:this.state.endDate});
       data.forEach(r=>{
         const dt =  moment.utc(r.day);
         const N=parseInt(r.count);
@@ -56,6 +59,7 @@ export default class DashboardPage extends Component {
           N: N,
           avg:avg,
           Label: `${dt.format('YYYY-MM-DD')}`,
+          category: r.questionset.questions[0].category,
           text: r.questionset.questions[0].question,
           options: r.questionset.questions[0].options.reverse(),
         });
@@ -69,26 +73,6 @@ export default class DashboardPage extends Component {
         }
       })
     }
-
-
-    // for(let i=0;i<10;i++) {
-    //   let n=200+ Math.round(Math.random()*1000);
-    //   let a = Math.round(n/20 + Math.random()*n/2 );
-    //   let b = Math.round(n/20 + Math.random()*(n/2) );
-    //   let c = Math.round(n/20 + Math.random()*(n/2) );
-    //   let d = Math.round(n/20 + Math.random()*(n/2) );
-    //   let e = Math.round(n/20 + Math.random()*(n/2) );
-    //   n=a+b+c+d+e;
-    //   questionHistory.push({
-    //     1: a,
-    //     2: b,
-    //     3: c,
-    //     4: d,
-    //     5: e,
-    //     N: n,
-    //     Label: `Question ${i}`
-    //   })
-    // }
     this.setState({responseRates, questionHistory, usersSummary});
   }
 
@@ -98,12 +82,68 @@ export default class DashboardPage extends Component {
     const {header='', errors=[]} = error;
     return <Message error header={header} list={errors} />
   }
-
+  handleDateRangeChange=({startDate, endDate})=>{
+    this.setState({startDate, endDate},async ()=>await this.refreshData());
+  }
+  
+  renderCalendarInfo=()=>{
+    const today=moment();
+    return <div style={{display:'flex', alignItems:'center', justifyContent:'center'}}>
+      This
+      <Button.Group basic tiny>
+        <Button onClick={()=>this.handleDateRangeChange({startDate:moment().startOf('week'), endDate: today})}>W</Button>
+        <Button onClick={()=>this.handleDateRangeChange({startDate:moment().startOf('month'), endDate: today})}>M</Button>
+        <Button onClick={()=>this.handleDateRangeChange({startDate:moment().startOf('quarter'), endDate: today})}>Q</Button>
+        <Button onClick={()=>this.handleDateRangeChange({startDate:moment().startOf('year'), endDate: today})}>Y</Button>
+      </Button.Group>
+    </div>
+  }
   render() {
     return <Page style={{padding:0}} loading={this.state.loading}>
       <Container>
         <br/>
         {this.renderError()}
+        <Segment>
+          <Form>
+            <Form.Group widths='equal'>
+              <Form.Field>
+              <label>Date range</label>
+              <DateRangePicker
+                maxDate={moment()}
+                minDate={moment().subtract(-1,'y')}
+                startDate={this.state.startDate} // momentPropTypes.momentObj or null,
+                startDateId="start_date_id" // PropTypes.string.isRequired,
+                endDate={this.state.endDate} // momentPropTypes.momentObj or null,
+                endDateId="end_date_id" // PropTypes.string.isRequired,
+                onDatesChange={this.handleDateRangeChange} // PropTypes.func.isRequired,
+                focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
+                onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
+
+                isOutsideRange={(d)=>{
+                  return moment(d).isAfter(moment());
+                }}
+                displayFormat="D MMM YY"
+                monthFormat="MMMM YYYY"
+                orientation="horizontal"
+                phrases={{
+                  focusStartDate: 'Interact with the calendar and add the start date for your dashboard.',
+                }}
+                small noBorder
+                calendarInfoPosition="top"
+                numberOfMonths={1}
+                renderCalendarInfo={this.renderCalendarInfo}
+              />
+              </Form.Field>
+
+              <Form.Field>
+                <label>Industry</label>
+                <OptionsDropdown opname='industry' placeholder='All' value={this.state.industries} onChange={(e,{value})=>{
+                  this.setState({industries: value});
+                }} selection multiple clearable />
+              </Form.Field>
+            </Form.Group>
+          </Form>
+        </Segment>
         <span style={{fontSize: "1.5em"}}>Reponse Percentage:</span>
         <RowCalendarPlot data={this.state.responseRates}/>
         <br/>
@@ -114,7 +154,13 @@ export default class DashboardPage extends Component {
           </Statistic>
         </Statistic.Group>
         <br/>
-        <Button onClick={async ()=>{
+        <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
+        <DivergingStackedBarPlot data={this.state.questionHistory} height={Math.max(360,this.state.questionHistory.length*50+60)}/>
+      </Container>
+    </Page>
+  }
+}
+/* <Button onClick={async ()=>{
           
             try {
               const headers=getHeaders();
@@ -128,10 +174,4 @@ export default class DashboardPage extends Component {
             } catch (ex) {
               console.log(ex);
             }
-        }}>Replay</Button>
-        <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
-        <DivergingStackedBarPlot data={this.state.questionHistory} height={Math.max(300,this.state.questionHistory.length*50+60)}/>
-      </Container>
-    </Page>
-  }
-}
+        }}>Replay</Button> */

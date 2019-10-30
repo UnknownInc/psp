@@ -43,6 +43,32 @@ export default class QuestionController {
     this.replayEvents = this.replayEvents.bind(this);
 
     this._addQEvent = this._addQEvent.bind(this);
+    this._hasReadAccess = this._hasReadAccess.bind(this);
+    this._hasWriteAccess = this._hasWriteAccess.bind(this);
+  }
+
+  /**
+   * returns true if the user in role to modify questions
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasWriteAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('qadmin')) return true;
+    if (user.isInRole('q:write')) return true;
+    return false;
+  }
+
+  /**
+   * returns true if the user in role to read questions
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasReadAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('qadmin')) return true;
+    if (user.isInRole('q:read')) return true;
+    return false;
   }
 
   /**
@@ -76,7 +102,7 @@ export default class QuestionController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -331,7 +357,7 @@ export default class QuestionController {
       }
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -359,7 +385,7 @@ export default class QuestionController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasWriteAccess(user)) {
       return res.status(403).json({
         error: 'Not authorized',
       });
@@ -406,7 +432,7 @@ export default class QuestionController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasWriteAccess(user)) {
       return res.status(403).json({
         error: 'Not authorized',
       });

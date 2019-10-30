@@ -33,6 +33,33 @@ export default class UserController {
     this.verify = this.verify.bind(this);
     this.updateUser = this.updateUser.bind(this);
     this.createUser = this.createUser.bind(this);
+
+    this._hasReadAccess = this._hasReadAccess.bind(this);
+    this._hasWriteAccess = this._hasWriteAccess.bind(this);
+  }
+
+  /**
+   * returns true if the user in role to modify users
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasWriteAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('useradmin')) return true;
+    if (user.isInRole('user:write')) return true;
+    return false;
+  }
+
+  /**
+   * returns true if the user in role to read users
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasReadAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('useradmin')) return true;
+    if (user.isInRole('user:read')) return true;
+    return false;
   }
 
   /**
@@ -67,7 +94,7 @@ export default class UserController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -135,7 +162,7 @@ export default class UserController {
     const User = this.database.User;
     let result;
     if (req.params.id!=='current') {
-      if ((req.params.id!==user._id) && !(user.isAdmin)) {
+      if ((req.params.id!==user._id) && !(this._hasReadAccess(user))) {
         return res.sendStaus(403);
       }
       const u = await User.findOne({_id: ObjectId(req.params.id)});
@@ -165,7 +192,7 @@ export default class UserController {
     const uid = req.params.id||user._id;
 
     if (uid!==user._id) {
-      if (!user.isAdmin) {
+      if (!this._hasWriteAccess(user)) {
         return res.sendStaus(403);
       }
     }
@@ -251,7 +278,7 @@ export default class UserController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!(this._hasWriteAccess(user))) {
       return res.sendStaus(403);
     }
 
