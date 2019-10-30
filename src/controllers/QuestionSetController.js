@@ -28,6 +28,32 @@ export default class QuestionSetController {
     this.getQuestionSets = this.getQuestionSets.bind(this);
     this.addQuestionSets = this.addQuestionSets.bind(this);
     this.updateQuestionSets = this.updateQuestionSets.bind(this);
+    this._hasReadAccess = this._hasReadAccess.bind(this);
+    this._hasWriteAccess = this._hasWriteAccess.bind(this);
+  }
+
+  /**
+   * returns true if the user in role to modify questions
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasWriteAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('qsadmin')) return true;
+    if (user.isInRole('qs:write')) return true;
+    return false;
+  }
+
+  /**
+   * returns true if the user in role to read questions
+   * @param {user} user for which to check the role
+   * @return {boolean} true if the user has right roles
+   */
+  _hasReadAccess(user) {
+    if (user.isAdmin) return true;
+    if (user.isInRole('qsadmin')) return true;
+    if (user.isInRole('qs:read')) return true;
+    return false;
   }
 
   /**
@@ -59,7 +85,7 @@ export default class QuestionSetController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -87,7 +113,7 @@ export default class QuestionSetController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -113,7 +139,7 @@ export default class QuestionSetController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasReadAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -169,7 +195,7 @@ export default class QuestionSetController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasWriteAccess(user)) {
       return res.sendStaus(403);
     }
 
@@ -235,7 +261,7 @@ export default class QuestionSetController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!this._hasWriteAccess(user)) {
       return res.sendStaus(403);
     }
 

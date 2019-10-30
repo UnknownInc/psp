@@ -17,7 +17,7 @@ export default class DivergingStackedBarPlot extends Component {
   }
 
   draw(props) {
-    var margin = props.margin || {top: 50, right: 100, bottom: 10, left: 65},
+    var margin = props.margin || {top: 50, right: 150, bottom: 10, left: 65},
     width = this.container.current.offsetWidth - margin.left - margin.right,
     height = (props.height||560) - margin.top - margin.bottom;
 
@@ -60,7 +60,7 @@ export default class DivergingStackedBarPlot extends Component {
         var idx = 0;
         d.boxes = color.domain().map(function(name) { 
           const op=d.options[idx];
-          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx += 1], avg: d.avg}; 
+          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx += 1], avg: d.avg, category: d.category}; 
         });
       });
 
@@ -150,12 +150,22 @@ export default class DivergingStackedBarPlot extends Component {
           .attr("text-anchor","middle")
           .style("font", "10px sans-serif")
           .text(function(d) { return Math.round(d.avg*100)+'%'});
-      vakken.append("text")
+
+      const endInfo= vakken.append('g');
+        endInfo.append("text")
+          .attr("x", width+35)
+          .attr("y", y.bandwidth()/2)
+          .attr("text-anchor","start")
+          .style("font", "12px sans-serif")
+          .text(function(d) { return d.category});
+        endInfo.append("text")
           .attr("x", width+35)
           .attr("y", y.bandwidth()/2+4)
-          .attr("text-anchor","middle")
+          .attr("text-anchor","start")
+          .attr("dominant-baseline","hanging")
           .style("font", "10px sans-serif")
-          .text(function(d) { return d.N});
+          .attr('fill','gray')
+          .text(function(d) { return '( r: '+d.N+' )'});
 
 
       svg.append("g")

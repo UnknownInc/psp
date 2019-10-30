@@ -121,6 +121,22 @@ class AdminUsersPage extends Component {
     this.setState({openNewUserModal: true});
   }
 
+  createNewUser = async ()=>{
+    const nuser = this.state.newUserEmail;
+    try{
+      let u = await User.getByEmail(nuser);
+      if (!u) {
+        u= new User({email:nuser});
+        await u.save()
+        this.setState({openNewUserModal: false, newUserEmail:''});
+      } else {
+      }
+    } catch (ex) {
+      console.error(ex);
+      this.setState({nerror:`unable to add new user:${nuser}`, openNewUserModal: false})
+    }
+  }
+
   handleUploadUsers = async () => {
     this.setState({openUploadModal: true});
   }

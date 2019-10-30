@@ -23,7 +23,7 @@ export default class QuestionSetForm extends Component {
       questionSetList:[{key:'default', text:'default', value:'default'}],
       questionSet:{key:'default', text:'default', value:'default'},
       offset:0,
-      limit:25,
+      limit:100,
       items:[],
       totalCount: 0,
       sortColumn:'date',
