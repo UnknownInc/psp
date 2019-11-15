@@ -23,6 +23,7 @@ export default class User {
     this.oid = oid;
     this.tags = tags;
     this.details = details;
+    this.roles= this.roles;
     return this;
   }
 
@@ -40,7 +41,7 @@ export default class User {
       careerStage: this.careerStage,
       oid: this.oid,
       tags: this.tags,
-      details: this.details
+      details: this.details,
     }
   }
 
