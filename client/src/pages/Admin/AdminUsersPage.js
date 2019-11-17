@@ -15,6 +15,12 @@ import User from '../../domain/User';
 import OptionsDropdown from '../../components/OptionsDropdown';
 import Team from '../../domain/Team';
 
+import ReactExport from "react-export-excel";
+  
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
+
 function isNotEmpty(str) {
   if (!str) return false;
 
@@ -99,8 +105,7 @@ class AdminUsersPage extends Component {
       if (isNotEmpty(this.state.titleFilter)){
         url+=`&t=${this.state.titleFilter}`
       }
-      const res = await fetch(url,
-          { headers})
+      const res = await fetch(url, { headers})
 
       if (!res.ok) {
         return this.setState({loading: false, error:{header:res.statusText}})
@@ -346,17 +351,17 @@ class AdminUsersPage extends Component {
                 <Form.Field>
                   <label>Capability</label>
                   <OptionsDropdown opname='capability' value={this.state.capabilityFilter} selection clearable
-                    onChange={(e,{value})=>this.setState({capabilityFilter: value})}/>
+                    onChange={(_,{value})=>this.setState({capabilityFilter: value})}/>
                 </Form.Field>
                 <Form.Field>
                   <label>Industry</label>
                   <OptionsDropdown opname='industry' value={this.state.industryFilter} selection clearable
-                    onChange={(e,{value})=>this.setState({industryFilter: value})}/>
+                    onChange={(_,{value})=>this.setState({industryFilter: value})}/>
                 </Form.Field>
                 <Form.Field>
                   <label>Title</label>
                   <OptionsDropdown opname='title' value={this.state.titleFilter} selection clearable
-                    onChange={(e,{value})=>this.setState({titleFilter: value})}/>
+                    onChange={(_,{value})=>this.setState({titleFilter: value})}/>
                 </Form.Field>
               </Form.Group>
               <Form.Group>
@@ -393,6 +398,10 @@ class AdminUsersPage extends Component {
           <ResponsiveButton onClick={this.handleUploadUsers} icon='cloud upload' text='Upload Users' minWidth={768}/>
           <ResponsiveButton onClick={this.handleSaveChanges} icon='save' text='Save Changes'  minWidth={768}/>
         </Button.Group>
+        &nbsp;
+        <Button.Group color='blue'>
+          {this.renderExcelExportButton()}
+        </Button.Group>
       </Segment>
      {updatingUsers ? <Segment attached>
       <Progress value={updateInfo.current} total={updateInfo.total} progress='ratio' indicating/>
@@ -405,6 +414,9 @@ class AdminUsersPage extends Component {
                 <Checkbox/>
               </Table.HeaderCell>
               <Table.HeaderCell/>
+              <Table.HeaderCell 
+                sorted={sortColumn === 'isVerified' ? sortDirection : null}
+                onClick={this.handleSort('isVerified')}><Icon name='check'/></Table.HeaderCell>
               <Table.HeaderCell 
                 sorted={sortColumn === 'name' ? sortDirection : null}
                 onClick={this.handleSort('name')}>Name</Table.HeaderCell>
@@ -436,8 +448,15 @@ class AdminUsersPage extends Component {
                     click here to edit the user
                   </Popup>
                 </Table.Cell>
+                <Table.Cell>{u.isVerified?<Icon name='check circle' color='green'/>: <Icon name='circle outline' color='green'/>}</Table.Cell>
                 <Table.Cell>{u.name}</Table.Cell>
-                <Table.Cell>{u.email}</Table.Cell>
+                <Table.Cell>{u.email}
+                  <Label.Group color='blue'>
+                    {u.roles.map((r,i)=>{
+                      return <Label size='mini' key={i}>{r}</Label>
+                    })}
+                  </Label.Group>
+                </Table.Cell>
                 <Table.Cell>{u.title}</Table.Cell>
                 <Table.Cell>{u.capability}</Table.Cell>
                 <Table.Cell>{u.industry}</Table.Cell>
@@ -475,6 +494,19 @@ class AdminUsersPage extends Component {
 
       </Segment>
     </div>
+  }
+
+  renderExcelExportButton() {
+    return <ExcelFile element={<ResponsiveButton onClick={this.handleExport} icon='file'text='Export' minWidth={768}/>}>
+      <ExcelSheet data={this.state.users} name='Users'>
+        <ExcelColumn label='Name' value='name'/>
+        <ExcelColumn label='Email' value='email'/>
+        <ExcelColumn label="Registered" value={(u) => u.isVerified ? "Yes" : "No"}/>
+        <ExcelColumn label="Title" value='title'/>
+        <ExcelColumn label="Capability" value='capability'/>
+        <ExcelColumn label="Industry" value='industry'/>
+      </ExcelSheet>
+    </ExcelFile>
   }
 
   renderNewUserModal() {

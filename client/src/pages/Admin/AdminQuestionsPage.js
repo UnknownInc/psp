@@ -211,9 +211,10 @@ class AdminQuestionsPage extends Component {
     this.setState({loading: true});
     const headers=getHeaders();
     headers["Content-Type"]="application/json";
-    const errors=[];
-    const newQuestions=[]
-    const modifiedQuestions=[]
+    const errors = [];
+    const newQuestions = [];
+    const modifiedQuestions = [];
+    const deletedQuestions = [];
     let items=[];
     this.state.items.forEach(v=>{
       if (v._id && v._id.substr(0,3)==='new') {
@@ -222,6 +223,12 @@ class AdminQuestionsPage extends Component {
         modifiedQuestions.push(v)
       } else {
         items.push(v);
+      }
+    })
+
+    this.state.deletedItems.forEach(v=>{
+      if (v._id && v._id.substr(0,3)!=='new'){
+        deletedQuestions.push({_id: v._id});
       }
     })
     if (newQuestions.length>0) {
@@ -264,6 +271,22 @@ class AdminQuestionsPage extends Component {
       }
       items = items.concat(modifiedQuestions);
     }
+    if (deletedQuestions.length>0) {
+      try {
+        const body = JSON.stringify({
+          questions: deletedQuestions
+        })
+        const res = await fetch(`${QUESTIONS_API}/api/question`, { headers, method: 'DELETE',  body})
+        if (res.ok) {
+          notify.show(`Deleted ${deletedQuestions.length} questions.`);
+        } else {
+          errors.push(res.statusText)
+        }
+      } catch (err) {
+        console.error(err)
+        errors.push("Unknown server error.");
+      }
+    }
 
     if (errors.length>0) {
       this.setState({
@@ -272,7 +295,7 @@ class AdminQuestionsPage extends Component {
         errors
       })
     }
-    this.setState({items, loading: false})
+    this.setState({items, loading: false, deletedItems:[]})
   }
 
   handlePreview = () => {
@@ -377,7 +400,7 @@ class AdminQuestionsPage extends Component {
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>
-                <Checkbox checked={this.state.allSelected} onChange={(e)=>{
+                <Checkbox checked={this.state.allSelected} onChange={(_)=>{
                   let allSelected=!this.state.allSelected;
                   const items=this.state.items;
                   for(let i=0;i<items.length;++i) { items[i].isSelected=allSelected}
@@ -400,7 +423,7 @@ class AdminQuestionsPage extends Component {
             let index=i;
             return <Table.Row key={q._id} positive={isNew} warning={q.isModified}>
               <Table.Cell collapsing>
-                <Checkbox checked={q.isSelected} onChange={e=>{
+                <Checkbox checked={q.isSelected} onChange={_=>{
                     const {items} = this.state;
                     let allSelected=true;
                     items[index].isSelected = !(items[index].isSelected);
@@ -409,16 +432,16 @@ class AdminQuestionsPage extends Component {
                 }}/>
               </Table.Cell>
               <Table.Cell collapsing>
-                <Popup trigger={<Button circular icon='edit' onClick={e=>{this.setState({ openEditModal: true, editingItem: q });}}/>}>
+                <Popup trigger={<Button circular icon='edit' onClick={_=>{this.setState({ openEditModal: true, editingItem: q });}}/>}>
                   click here to edit the question
                 </Popup>
               </Table.Cell>
               <Table.Cell>{q.question}</Table.Cell>
               <Table.Cell >{q.category}</Table.Cell>
               <Table.Cell collapsing>
-              < Popup trigger={<Button circular icon='delete' onClick={e=>{
+              < Popup trigger={<Button circular icon='delete' onClick={_=>{
                   let items=this.state.items.slice(0,i).concat(this.state.items.slice(i+1));
-                  let deletedItems=[].push(q);
+                  let deletedItems=[...this.state.deletedItems,q];
                   this.setState({items, deletedItems})
                 }}/>}>click here to delete the question</Popup>
               </Table.Cell>
@@ -434,7 +457,7 @@ class AdminQuestionsPage extends Component {
                 </Menu.Item>
                 {pages.map(i=><Menu.Item key={i} as='a' 
                   active={currentPage===i}
-                  onClick={e=>{
+                  onClick={_=>{
                     const pageNumber=i;
                     this.loadPage(pageNumber);
                   }} >{i}</Menu.Item>)}
@@ -482,12 +505,12 @@ class AdminQuestionsPage extends Component {
                     multiple
                     allowAdditions
                     value={this.state.tagsFilter}
-                    onAddItem={ (e, { value }) => {
+                    onAddItem={ (_, { value }) => {
                       this.setState(prevState => ({
                         tagsOptions: [{ text: value, value }, ...prevState.tagsOptions],
                       }))
                     }}
-                    onChange={(e, { value }) => this.setState({ tagsFilter: value })}/>
+                    onChange={(_, { value }) => this.setState({ tagsFilter: value })}/>
                 </Form.Field>
                 
               </Form.Group>

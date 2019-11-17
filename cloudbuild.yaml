@@ -69,10 +69,10 @@ steps:
     export GOPATH=/root/go
     export PATH=$$PATH:$$GOPATH/bin
     echo $$PATH
-    go get -u gopkg.in/mikefarah/yq.v2
+    GO111MODULE=on go get -v github.com/mikefarah/yq@2.4.1
     cd psp/psp-env && \
-    yq.v2 w -i values.yaml app.image.repository gcr.io/${PROJECT_ID}/${_APP_NAME}-${BRANCH_NAME} && \
-    yq.v2 w -i values.yaml app.image.tag "${SHORT_SHA}"
+    yq w -i values.yaml app.image.repository gcr.io/${PROJECT_ID}/${_APP_NAME}-${BRANCH_NAME} && \
+    yq w -i values.yaml app.image.tag "${SHORT_SHA}"
 # This step pushes the manifest back to psp-env
 - name: 'gcr.io/cloud-builders/gcloud'
   id: Push manifest

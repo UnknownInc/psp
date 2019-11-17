@@ -30,7 +30,7 @@ export default class QuestionForm extends Component {
     }
   }
 
-  handleCategoryChange = (event,{value}) => {
+  handleCategoryChange = (_,{value}) => {
     const query = {...this.state.query};
     query.category=value;
     this.setState({query})
@@ -163,12 +163,12 @@ export default class QuestionForm extends Component {
         multiple
         allowAdditions
         value={query.tags}
-        onAddItem={ (e, { value }) => {
+        onAddItem={ (_, { value }) => {
           this.setState(prevState => ({
             tagsOptions: [{ text: value, value }, ...prevState.tagsOptions],
           }))
         }}
-        onChange={(e, { value }) => {
+        onChange={(_, { value }) => {
           const query = {...this.state.query};
           query.tags=value;
           this.setState({query})

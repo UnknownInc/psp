@@ -12,7 +12,8 @@ export default class DivergingStackedBarPlot extends Component {
   componentDidMount() {
     this.draw(this.props);
   }
-  componentDidUpdate(prevProps) {
+
+  componentDidUpdate(_) {
     this.draw(this.props);
   }
 
@@ -117,7 +118,7 @@ export default class DivergingStackedBarPlot extends Component {
           .attr("width", width)
           .attr("fill-opacity", "0.5")
           .style("fill", "#e2e2e2")
-          .attr("class", function(d,index) { return index%2===0 ? "even" : "odd"; })
+          .attr("class", function(_, index) { return index%2===0 ? "even" : "odd"; })
         .append('title')
           .text(function(d){return d.text});
       

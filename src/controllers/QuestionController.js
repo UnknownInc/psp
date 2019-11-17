@@ -39,6 +39,7 @@ export default class QuestionController {
     this.getQuestions = this.getQuestions.bind(this);
     this.addQuestions = this.addQuestions.bind(this);
     this.updateQuestions = this.updateQuestions.bind(this);
+    this.deleteQuestions = this.deleteQuestions.bind(this);
     this.submitResponse = this.submitResponse.bind(this);
     this.replayEvents = this.replayEvents.bind(this);
 
@@ -81,6 +82,7 @@ export default class QuestionController {
     router.get('/', this.getQuestions);
     router.get('/:id', this.getQuestion);
     router.put('/', this.updateQuestions);
+    router.delete('/', this.deleteQuestions);
     router.post('/', this.addQuestions);
     router.post('/submit', this.submitResponse);
     router.post('/replay', this.replayEvents);
@@ -297,7 +299,7 @@ export default class QuestionController {
 
     parents = await Node.find({children: {'$in': userid}, type: 'Mentees'});
     groups.mentees = parents.map((n)=>`${n.user}`);
-    
+
     parents = await Node.find({children: {'$in': userid}, type: 'ProjectTeam'});
     groups.projectteam = parents.map((n)=>`${n.user}`);
 
@@ -417,6 +419,44 @@ export default class QuestionController {
     });
   }
 
+
+  /**
+   * deletes question identified by the id
+   * @param {express.request} req request object
+   * @param {express.response} res response object
+   * @return {any} deleted count
+   */
+  async deleteQuestions(req, res) {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'Unknown user',
+      });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({
+        error: 'Not authorized',
+      });
+    }
+
+    const questions=req.body.questions||[];
+    // TODO: validate the questions
+    const Question = this.database.Question;
+
+    const bulk = Question.collection.initializeOrderedBulkOp();
+    questions.forEach((q)=>{
+      bulk.find({'_id': ObjectId(q._id)})
+          .removeOne();
+    });
+    bulk.execute((error)=>{
+      if (error) {
+        this.logger.error(error);
+        return res.sendStatus(500);
+      }
+      return res.sendStatus(200);
+    });
+  }
 
   /**
    * adds new questions
