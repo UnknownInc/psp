@@ -4,6 +4,7 @@ ARG COMMITID
 FROM node:12.13.0-alpine AS build
 RUN apk add --update --no-cache \
     python \
+    git \
     make \
     g++
 
@@ -31,6 +32,7 @@ RUN rm -rf node_modules
 FROM node:12.13.0-alpine AS uibuild
 RUN apk add --update --no-cache \
     python \
+    git \
     make \
     g++
 
