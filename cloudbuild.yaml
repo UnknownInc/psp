@@ -62,9 +62,6 @@ steps:
     path: /root/.ssh
   dir: psp
 - name: 'gcr.io/cloud-builders/go'
-  env:
-  - GO111MODULE=on
-  - GOPROXY=https://proxy.golang.org
   entrypoint: /bin/sh
   args:
   - '-c'
@@ -72,7 +69,7 @@ steps:
     export GOPATH=/root/go
     export PATH=$$PATH:$$GOPATH/bin
     echo $$PATH
-    GO111MODULE=off go get -u gopkg.in/mikefarah/yq.v2
+    GO111MODULE=on go get github.com/mikefarah/yq
     cd psp/psp-env && \
     yq w -i values.yaml app.image.repository gcr.io/${PROJECT_ID}/${_APP_NAME}-${BRANCH_NAME} && \
     yq w -i values.yaml app.image.tag "${SHORT_SHA}"
