@@ -414,6 +414,12 @@ class AdminQuestionsPage extends Component {
             <Table.HeaderCell 
               sorted={sortColumn === 'category' ? sortDirection : null}
               onClick={this.handleSort('category')}>Category</Table.HeaderCell>
+            <Table.HeaderCell 
+              sorted={sortColumn === 'lastqsdate' ? sortDirection : null}
+              onClick={this.handleSort('lastqsdate')}>Last Date</Table.HeaderCell>
+            <Table.HeaderCell 
+              sorted={sortColumn === 'nextqsdate' ? sortDirection : null}
+              onClick={this.handleSort('nextqsdate')}>Next Date</Table.HeaderCell>
             <Table.HeaderCell />
           </Table.Row>
         </Table.Header>
@@ -438,6 +444,8 @@ class AdminQuestionsPage extends Component {
               </Table.Cell>
               <Table.Cell>{q.question}</Table.Cell>
               <Table.Cell >{q.category}</Table.Cell>
+          <Table.Cell >{q.lastqsdate ? (moment(q.lastqsdate).fromNow() + ' - ' + moment(q.lastqsdate).format('DD MMM YY')) : ''}</Table.Cell>
+              <Table.Cell >{q.nextqsdate ? (moment(q.nextqsdate).fromNow() + ' - ' + moment(q.nextqsdate).format('DD MMM YY')) : ''}</Table.Cell>
               <Table.Cell collapsing>
               < Popup trigger={<Button circular icon='delete' onClick={_=>{
                   let items=this.state.items.slice(0,i).concat(this.state.items.slice(i+1));

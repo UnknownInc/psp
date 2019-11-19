@@ -5,6 +5,7 @@ import { Header, Button, Icon, Message,
   Accordion, Input, Progress } from 'semantic-ui-react';
 import { isNullOrUndefined } from 'util';
 import { getProfile, getHeaders } from '../../config'
+import moment from 'moment';
 import csv from "fast-csv";
 import uuidv1 from 'uuid/v1';
 import VError from 'verror';
@@ -432,6 +433,7 @@ class AdminUsersPage extends Component {
               <Table.HeaderCell 
                   sorted={sortColumn === 'industry' ? sortDirection : null}
                   onClick={this.handleSort('industry')}>Industry</Table.HeaderCell>
+              <Table.HeaderCell>Last Response</Table.HeaderCell>
               <Table.HeaderCell />
             </Table.Row>
           </Table.Header>
@@ -460,6 +462,7 @@ class AdminUsersPage extends Component {
                 <Table.Cell>{u.title}</Table.Cell>
                 <Table.Cell>{u.capability}</Table.Cell>
                 <Table.Cell>{u.industry}</Table.Cell>
+                <Table.Cell>{u.lastresponsedate ? (moment(u.lastresponsedate).fromNow() + ' - ' + moment(u.lastresponsedate).format('DD MMM YY')) : ''}</Table.Cell>
                 <Table.Cell collapsing>
                   <Popup trigger={<Button circular icon='delete' onClick={()=>{
                     let users=this.state.users.slice(0,i).concat(this.state.users.slice(i+1));

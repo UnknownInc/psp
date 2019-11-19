@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable new-cap */
 import moment from 'moment';
 const {Router} = require('express');
@@ -109,6 +110,7 @@ export default class QuestionController {
     }
 
     const Question = this.database.Question;
+    const QuestionSet = this.database.QuestionSet;
     // TODO: validate the questions query parameters
     const query={};
     try {
@@ -136,10 +138,34 @@ export default class QuestionController {
         mq=mq.sort(req.query.sort);
       }
       const results = await mq.skip(offset).limit(limit);
-      const questions=[];
-      results.forEach((q) => {
-        questions.push(q.toObject());
+      let questions=[];
+      await results.asyncForEach(async (q) => {
+        const qo = q.toObject();
+        let qsMatches = await QuestionSet.find({'questions._id': q._id, 'date': {'$lt': new Date()}})
+            .sort({date: '-1'})
+            .limit(1);
+        if (qsMatches.length>0) {
+          qo.lastqsdate = moment(qsMatches[0].date).toDate();
+        }
+
+        qsMatches = await QuestionSet.find({'questions._id': q._id, 'date': {'$gt': new Date()}})
+            .sort({date: '-1'})
+            .limit(1);
+        if (qsMatches.length>0) {
+          qo.nextqsdate = moment(qsMatches[0].date).toDate();
+        }
+        questions.push(qo);
       });
+      if (req.query.sort==='lastqsdate') {
+        questions=questions.sort((a, b)=> (new Date(b.lastqsdate||'2000-01-01') - new Date(a.lastqsdate||'2000-01-01')));
+      } else if (req.query.sort==='-lastqsdate') {
+        questions=questions.sort((a, b)=>(new Date(b.lastqsdate||'2000-01-01') - new Date(a.lastqsdate||'2000-01-01')));
+      }
+      if (req.query.sort==='nextqsdate') {
+        questions=questions.sort((a, b)=> (new Date(b.nextqsdate||'2000-01-01') - new Date(a.nextqsdate||'2000-01-01')));
+      } else if (req.query.sort==='-nextqsdate') {
+        questions=questions.sort((a, b)=>(new Date(b.nextqsdate||'2000-01-01') - new Date(a.nextqsdate||'2000-01-01')));
+      }
       res.set('X-Total-Count', ''+count);
       return res.json(questions);
     } catch (err) {

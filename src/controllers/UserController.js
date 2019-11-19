@@ -1,6 +1,7 @@
 /* eslint-disable new-cap */
 const {Router} = require('express');
 import {getEmailParts} from '../common/helpers';
+import moment from 'moment';
 const uuidv4 = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -99,6 +100,7 @@ export default class UserController {
     }
 
     const User = this.database.User;
+    const Response = this.database.Response;
     const query={};
     try {
       let offset = 0;
@@ -135,11 +137,28 @@ export default class UserController {
       }
       const users = await mq.skip(offset).limit(limit);
 
-      const results=[];
-      users.forEach((u)=>results.push(u.toObject()));
+      let results=[];
+      await users.asyncForEach(async (u)=>{
+        const uo = u.toObject();
+        const resMatches = await Response.find({'user': u._id})
+            .sort({date: '-1'})
+            .limit(1);
+        if (resMatches.length>0) {
+          uo.lastresponsedate = moment(resMatches[0].date).toDate();
+          console.log(uo.lastresponsedate);
+        }
+
+        results.push(uo);
+      });
+
+      if (req.query.sort==='lastresponsedate') {
+        results=results.sort((a, b)=> (new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
+      } else if (req.query.sort==='-lastresponsedate') {
+        results=results.sort((a, b)=>(new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
+      }
 
       res.set('X-Total-Count', ''+count);
-      return res.json(users);
+      return res.json(results);
     } catch (err) {
       this.logger.error(err);
     }
@@ -396,6 +415,7 @@ export default class UserController {
       this.logger.debug(company.toObject());
       if (company.domain.indexOf(payload.domain)!=-1) {
         return res.status(400).json({
+          // eslint-disable-next-line max-len
           error: `Invalid domain: ${payload.domain} for company ${payload.companyname}`,
         });
       }
@@ -431,6 +451,7 @@ export default class UserController {
         await this.mailer.sendMail(emailContent);
       }
       return res.json({
+        // eslint-disable-next-line max-len
         message: `Thanks for registering. Please verify as per the instructions sent to ${payload.address}`,
       });
     } catch (ex) {
