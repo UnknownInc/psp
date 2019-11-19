@@ -145,7 +145,6 @@ export default class UserController {
             .limit(1);
         if (resMatches.length>0) {
           uo.lastresponsedate = moment(resMatches[0].date).toDate();
-          console.log(uo.lastresponsedate);
         }
 
         results.push(uo);
