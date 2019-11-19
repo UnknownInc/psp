@@ -45,7 +45,7 @@ export default class UserController {
    * @return {boolean} true if the user has right roles
    */
   _hasWriteAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('useradmin')) return true;
     if (user.isInRole('user:write')) return true;
     return false;
@@ -57,7 +57,7 @@ export default class UserController {
    * @return {boolean} true if the user has right roles
    */
   _hasReadAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('useradmin')) return true;
     if (user.isInRole('user:read')) return true;
     return false;
@@ -96,7 +96,8 @@ export default class UserController {
     }
 
     if (!this._hasReadAccess(user)) {
-      return res.sendStaus(403);
+      console.log(user);
+      return res.sendStatus(403);
     }
 
     const User = this.database.User;
@@ -145,8 +146,9 @@ export default class UserController {
             .limit(1);
         if (resMatches.length>0) {
           uo.lastresponsedate = moment(resMatches[0].date).toDate();
+          u.lastresponsedate = uo.lastresponsedate;
         }
-
+        uo.roles=uo.roles||[];
         results.push(uo);
       });
 
@@ -188,7 +190,7 @@ export default class UserController {
     } else {
       result = user;
     }
-    delete result.roles;
+    // delete result.roles;
     res.set('Cache-Control', 'public, max-age=60');
     return res.json(result);
   }
@@ -269,10 +271,10 @@ export default class UserController {
       await u.save();
 
       const result = u.toObject();
-      result.isAdmin = user.isAdmin;
+      result.isAdmin = (u.roles.indexOf('admin')!==-1);
       // set to expire after 1 hour
       this.cache.set(u.email.toLowerCase(), JSON.stringify(result), 'EX', 3600);
-      delete result.roles;
+      // delete result.roles;
       return res.json(result);
     } catch (err) {
       this.logger.error('updateUser exception:', err);
@@ -372,7 +374,7 @@ export default class UserController {
       const result = u.toObject();
       // set to expire after 1 hour
       this.cache.set(u.email.toLowerCase(), JSON.stringify(result), 'EX', 3600);
-      delete result.roles;
+      // delete result.roles;
       return res.json(result);
     } catch (err) {
       this.logger.error('createUser exception:', err);

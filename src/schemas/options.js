@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import {Schema as _Schema} from 'mongoose';
+const Schema = _Schema;
 
 // Data we need to collect/confirm to have the app go.
 const fields = {
@@ -12,4 +12,4 @@ const optionsSchema = new Schema(fields);
 
 optionsSchema.index({name: 1}, {unique: true});
 
-module.exports = optionsSchema;
+export default optionsSchema;

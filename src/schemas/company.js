@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import {Schema as _Schema} from 'mongoose';
+const Schema = _Schema;
 const ObjectId = Schema.Types.ObjectId;
 
 // Data we need to collect/confirm to have the app go.
@@ -46,4 +46,4 @@ class CompanyClass {
 
 companySchema.loadClass(CompanyClass);
 
-module.exports = companySchema;
+export default companySchema;

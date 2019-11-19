@@ -45,7 +45,8 @@ const userAuthorizationMiddleware = ({config, logger, cache, database}) => {
           }
           result.roles=result.roles||[];
           req.user = result;
-          req.user.isInRole=(role)=>(result.roles.indexOf(role)!=-1);
+          req.user.isInRole=(role)=>(result.roles.indexOf(role)!==-1);
+          req.user.isAdmin = req.user.isInRole('admin');
           next();
         });
       });

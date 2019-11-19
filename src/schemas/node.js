@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const MpathPlugin = require('mongoose-mpath');
+import {Schema as _Schema} from 'mongoose';
+const Schema = _Schema;
+import MpathPlugin from 'mongoose-mpath';
 
 const ObjectId = Schema.Types.ObjectId;
 
@@ -31,4 +31,4 @@ nodeSchema.index({user: 1});
 nodeSchema.index({name: 1});
 nodeSchema.index({children: 1});
 
-module.exports = nodeSchema;
+export default nodeSchema;

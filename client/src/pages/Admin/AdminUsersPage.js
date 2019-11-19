@@ -505,6 +505,7 @@ class AdminUsersPage extends Component {
         <ExcelColumn label='Name' value='name'/>
         <ExcelColumn label='Email' value='email'/>
         <ExcelColumn label="Registered" value={(u) => u.isVerified ? "Yes" : "No"}/>
+        <ExcelColumn label="last response date" value='lastresponsedate'/>
         <ExcelColumn label="Title" value='title'/>
         <ExcelColumn label="Capability" value='capability'/>
         <ExcelColumn label="Industry" value='industry'/>

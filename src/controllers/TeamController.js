@@ -64,7 +64,7 @@ export default class TeamController {
 
     let userid=user._id;
     if (req.body.user && userid!==req.body.user) {
-      if (!user.isAdmin) {
+      if (!user.isInRole('admin')) {
         return res.sendStaus(403);
       }
       userid=req.body.user;
@@ -169,7 +169,7 @@ export default class TeamController {
 
     let userid=user._id;
     if (req.body.user) {
-      if (!user.isAdmin && userid!==req.body.user) {
+      if (!user.isInRole('admin') && userid!==req.body.user) {
         return res.sendStaus(403);
       }
       userid=req.body.user;
@@ -207,7 +207,7 @@ export default class TeamController {
 
       let teamOwner = teamNode.user;
       if (req.body.user) {
-        if (user._id!==teamNode.user._id && !user.isAdmin) {
+        if (user._id!==teamNode.user._id && !user.isInRole('admin')) {
           return res.status(403).send({
             error: 'Not the team owner',
           });
@@ -373,7 +373,7 @@ export default class TeamController {
       const query={_id: ObjectId(req.params.teamid)};
       const teamNode = await Node.findOne(query);
 
-      if (teamNode.user!==ObjectId(user._id) && !user.isAdmin) {
+      if (teamNode.user!==ObjectId(user._id) && !user.isInRole('admin')) {
         return res.sendStatus(403);
       }
 

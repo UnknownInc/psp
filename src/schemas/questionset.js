@@ -1,8 +1,7 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const ObjectId = Schema.Types.ObjectId;
+import {Schema as _Schema} from 'mongoose';
+const Schema = _Schema;
 
-const questionSchema = require('./question');
+import questionSchema from './question';
 
 // Data we need to collect/confirm to have the app go.
 const fields = {
@@ -21,4 +20,4 @@ questionSetSchema.index({date: 1});
 questionSetSchema.index({selector: 1});
 
 
-module.exports = questionSetSchema;
+export default questionSetSchema;

@@ -55,7 +55,7 @@ export default class QuestionController {
    * @return {boolean} true if the user has right roles
    */
   _hasWriteAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('qadmin')) return true;
     if (user.isInRole('q:write')) return true;
     return false;
@@ -67,7 +67,7 @@ export default class QuestionController {
    * @return {boolean} true if the user has right roles
    */
   _hasReadAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('qadmin')) return true;
     if (user.isInRole('q:read')) return true;
     return false;
@@ -131,7 +131,7 @@ export default class QuestionController {
       if (req.query.t) {
         query.tags={'$in': req.query.t.split(',')};
       }
-      const count = await Question.where({query}).countDocuments();
+      const count = await Question.find({query}).estimatedDocumentCount();
       this.logger.debug(count);
       let mq = Question.find(query);
       if (req.query.sort) {
@@ -197,6 +197,7 @@ export default class QuestionController {
       return res.sendStatus(400);
     }
 
+    const User = this.database.User;
     const QuestionSet = this.database.QuestionSet;
     const Response = this.database.Response;
 
@@ -238,6 +239,9 @@ export default class QuestionController {
         await todaysResponse.save();
       }
 
+      const u = await User.findOne({'_id': ObjectId(user._id)});
+      u.lastresponsedate = moment.utc().toDate();
+      await u.save();
 
       await this._addQEvent(qs, response, user._id, rdate);
 
@@ -261,7 +265,7 @@ export default class QuestionController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!user.isInRole('admin')) {
       return res.status(403).json({
         error: 'Not authorized',
       });
@@ -361,8 +365,12 @@ export default class QuestionController {
 
     if (req.params.id==='current') {
       try {
+        console.log(moment().utc().startOf('day').toDate());
         const result = await QuestionSet
-            .findOne({name: 'default', date: (moment().utc().startOf('day'))});
+            .findOne({name: 'default', date: {
+              '$gte': moment().utc().startOf('day'),
+              '$lte': moment().utc().endOf('day'),
+            }});
 
         // const match = await Response.findOne({
         //   user: user._id,
@@ -373,7 +381,9 @@ export default class QuestionController {
 
         // if (match) {
         // }
-
+        const u = await this.database.User.findOne({'_id': ObjectId(user._id)});
+        u.lastactivedate = moment.utc().toDate();
+        await u.save();
         if (result) {
           return res.json(result.toObject());
         } else {
@@ -460,7 +470,7 @@ export default class QuestionController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!user.isInRole('admin')) {
       return res.status(403).json({
         error: 'Not authorized',
       });

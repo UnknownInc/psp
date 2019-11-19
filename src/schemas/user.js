@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 const ObjectId = Schema.Types.ObjectId;
 
 // Data we need to collect/confirm to have the app go.
 const fields = {
   name: {type: String, default: ''},
+  // eslint-disable-next-line max-len
   email: {type: String, required: true, unique: true, trim: true, lowercase: true},
   roles: [String],
   tags: [String],
@@ -21,6 +21,8 @@ const fields = {
   company: {type: ObjectId, ref: 'Company'},
   isVerified: {type: Boolean, default: false},
   createdAt: {type: Date, default: Date.now},
+  lastresponsedate: {type: Date},
+  lastactivedate: {type: Date},
 };
 
 // One nice, clean line to create the Schema.
@@ -38,12 +40,22 @@ class UserClass {
     const hash = md5(this.email.toLowerCase());
     return `https://www.gravatar.com/avatar/${hash}`;
   }
+
   /*
   // `getProfileUrl()` becomes a document method
   getProfileUrl() {
     return `https://mysite.com/${this.email}`;
   }
   */
+
+  /**
+   * checks if role is present in the user roles
+   * @param {string} role
+   * @return {boolean} if the role exists in user roles
+   */
+  isInRole(role) {
+    return (this.roles||[]).indexOf(role)!=-1;
+  }
 
   /**
    * matches the user by email
@@ -64,4 +76,4 @@ userSchema.index({oid: 1});
 
 userSchema.loadClass(UserClass);
 
-module.exports = userSchema;
+export default userSchema;

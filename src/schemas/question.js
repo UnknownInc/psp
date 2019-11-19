@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import {Schema as _Schema} from 'mongoose';
+const Schema = _Schema;
 const ObjectId = Schema.Types.ObjectId;
 
 // Data we need to collect/confirm to have the app go.
@@ -23,4 +23,4 @@ const questionSchema = new Schema(fields);
 questionSchema.index({question: 1});
 questionSchema.index({category: 1});
 questionSchema.index({tags: 1});
-module.exports = questionSchema;
+export default questionSchema;
