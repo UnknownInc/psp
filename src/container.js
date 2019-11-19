@@ -13,6 +13,13 @@ import Server from './interfaces/http/Server';
 import router from './interfaces/http/Router';
 
 
+// eslint-disable-next-line no-extend-native
+Array.prototype.asyncForEach = async function asyncForEach(callback) {
+  for (let index = 0; index < this.length; index++) {
+    await callback(this[index], index, this);
+  }
+};
+
 const container = createContainer();
 
 // System
