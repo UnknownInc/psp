@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import { Schema as _Schema } from 'mongoose';
+const Schema = _Schema;
 // const ObjectId = Schema.Types.ObjectId;
 
 // Data we need to collect/confirm to have the app go.
@@ -19,4 +19,4 @@ class TokenClass {
 }
 tokenSchema.loadClass(TokenClass);
 
-module.exports = tokenSchema;
+export default tokenSchema;

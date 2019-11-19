@@ -93,7 +93,7 @@ export default class OptionsController {
       });
     }
 
-    if (!user.isAdmin && !req.query.onlynames) {
+    if (!user.isInRole('admin') && !req.query.onlynames) {
       return res.sendStaus(403);
     }
 
@@ -130,7 +130,7 @@ export default class OptionsController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!user.isInRole('admin')) {
       return res.sendStaus(403);
     }
 
@@ -181,7 +181,7 @@ export default class OptionsController {
       });
     }
 
-    if (!user.isAdmin) {
+    if (!user.isInRole('admin')) {
       return res.sendStaus(403);
     }
 

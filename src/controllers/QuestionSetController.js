@@ -38,7 +38,7 @@ export default class QuestionSetController {
    * @return {boolean} true if the user has right roles
    */
   _hasWriteAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('qsadmin')) return true;
     if (user.isInRole('qs:write')) return true;
     return false;
@@ -50,7 +50,7 @@ export default class QuestionSetController {
    * @return {boolean} true if the user has right roles
    */
   _hasReadAccess(user) {
-    if (user.isAdmin) return true;
+    if (user.isInRole('admin')) return true;
     if (user.isInRole('qsadmin')) return true;
     if (user.isInRole('qs:read')) return true;
     return false;

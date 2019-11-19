@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const mongoose = require('mongoose');
 
 /**
@@ -29,14 +30,14 @@ export default class Database {
    * connect the model to the db connection
    */
   createModels() {
-    this.Question = this.db.model('Question', require('../../schemas/question'));
-    this.QuestionSet = this.db.model('QuestionSet', require('../../schemas/questionset'));
-    this.Response = this.db.model('Response', require('../../schemas/response'));
-    this.User = this.db.model('User', require('../../schemas/user'));
-    this.Company = this.db.model('Company', require('../../schemas/company'));
-    this.Node = this.db.model('Node', require('../../schemas/node'));
-    this.Token = this.db.model('Token', require('../../schemas/token'));
-    this.Options = this.db.model('Options', require('../../schemas/options'));
+    this.Question = this.db.model('Question', require('../../schemas/question').default);
+    this.QuestionSet = this.db.model('QuestionSet', require('../../schemas/questionset').default);
+    this.Response = this.db.model('Response', require('../../schemas/response').default);
+    this.User = this.db.model('User', require('../../schemas/user').default);
+    this.Company = this.db.model('Company', require('../../schemas/company').default);
+    this.Node = this.db.model('Node', require('../../schemas/node').default);
+    this.Token = this.db.model('Token', require('../../schemas/token').default);
+    this.Options = this.db.model('Options', require('../../schemas/options').default);
   }
 
   /**
