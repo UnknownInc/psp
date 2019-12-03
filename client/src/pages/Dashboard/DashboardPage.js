@@ -153,25 +153,28 @@ export default class DashboardPage extends Component {
             <Statistic.Value><Icon name='user'/> {this.state.usersSummary?this.state.usersSummary.registeredUsers:null}</Statistic.Value>
           </Statistic>
         </Statistic.Group>
+        {this.replayButton()}
         <br/>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
         <DivergingStackedBarPlot data={this.state.questionHistory} height={Math.max(360,this.state.questionHistory.length*50+60)}/>
       </Container>
     </Page>
   }
+  replayButton() {
+    return <Button onClick={async ()=>{
+      try {
+        const headers=getHeaders();
+        headers["Content-type"] = "application/json";
+        const response = await fetch(`/api/question/replay`, {
+          headers,
+          method: 'POST',
+          body:JSON.stringify({})
+        })
+      } catch (ex) {
+        console.log(ex);
+      }
+    }}>
+    Replay</Button> 
+  }
 }
-/* <Button onClick={async ()=>{
-          
-            try {
-              const headers=getHeaders();
-              headers["Content-type"] = "application/json";
-              const response = await fetch(`/api/question/replay`, {
-                headers,
-                method: 'POST',
-                body:JSON.stringify({
-                })
-              })
-            } catch (ex) {
-              console.log(ex);
-            }
-        }}>Replay</Button> */
+/* */

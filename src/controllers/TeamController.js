@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable new-cap */
 import {getEmailParts, AsyncHelper} from '../common/helpers';
 const {Router} = require('express');
@@ -337,8 +338,8 @@ export default class TeamController {
       for (let i=0; i<nl.length; i++) {
         const t = await Node.populate(nl[i],
             [
-              {'path': 'user', 'select': ['email', 'name', 'title']},
-              {'path': 'children', 'select': ['email', 'name', 'title']},
+              {'path': 'user', 'select': ['email', 'name', 'title', 'isVerified', 'lastresponsedate']},
+              {'path': 'children', 'select': ['email', 'name', 'title', 'isVerified', 'lastresponsedate']},
             ]);
         const node= t.toObject();
         // const children= await nl[i].getImmediateChildren({});

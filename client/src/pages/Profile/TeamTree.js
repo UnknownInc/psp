@@ -136,7 +136,7 @@ export default class TeamTree extends Component {
 
   getNodeKey = ({ node, treeIndex }) => treeIndex;
 
-  _getChildrenTreeData = (team, tdata) => {
+  _getChildrenTreeData = (team, _tdata) => {
     const data=[];
     team.children.forEach(c=>{
       data.push({
@@ -310,7 +310,6 @@ export default class TeamTree extends Component {
 
       node.children = this._getTreeData(teams);
 
-      console.log(path);
       treeData = changeNodeAtPath({
         treeData: treeData,
         newNode: node,
@@ -362,7 +361,7 @@ export default class TeamTree extends Component {
             }
             return false;
           }}
-          canDrag={n=>{
+          canDrag={_n=>{
             return false;
             //return !(n.node.id.startsWith('_'));
           }}
@@ -398,39 +397,47 @@ export default class TeamTree extends Component {
 
   renderNode=({ node, path }) => {
     const buttons=[];
+    let color='black';
+    let addInfo='';
 
     if (node.type==='team') {
       buttons.push(
         <Popup content='Edit team name' trigger={(
-          <Icon name='pencil alternate' onClick={e=>{this.handleNameChange(node.o, path)}} style={{marginRight:'1.5em'}}/>)}
+          <Icon name='pencil alternate' onClick={_e=>{this.handleNameChange(node.o, path)}} style={{marginRight:'1.5em'}}/>)}
         />
       )
 
       buttons.push(
         <Popup content='Add users to the team' trigger={(
-          <Icon.Group onClick={e=>{this.handleAddMember(node.o, path[path.length-1])}} 
+          <Icon.Group onClick={_e=>{this.handleAddMember(node.o, path[path.length-1])}} 
             style={{marginRight:'1.5em'}}>
             <Icon name='user'/>
             <Icon corner name='add' color='green' />
           </Icon.Group>)} />
       )
     } else {
+      if (!node.o.isVerified){
+        color='darkred';
+      }
+      if (node.o.lastresponsedate) {
+        addInfo=`( ${node.o.lastresponsedate.fromNow(true)} )`
+      }
       buttons.push(
         <Popup content='Show Teams' trigger={(
-          <Icon name='users' onClick={e=>{this.handleShowTeams(node, path)}} style={{marginRight:'1.5em'}}/>)}
+          <Icon name='users' onClick={_e=>{this.handleShowTeams(node, path)}} style={{marginRight:'1.5em'}}/>)}
         />
       )
     }
 
     buttons.push(
       <Popup content={'Remove'} trigger={(
-        <Icon name='close' color='grey' onClick={e=>{ this.removeNode(node, path)}}/>
+        <Icon name='close' color='grey' onClick={_e=>{ this.removeNode(node, path)}}/>
       )}/>
     )
     
     return {
       style:{backgroundColor:'lightgray'},
-      title: (<span>{node.title}</span>),
+    title: (<span style={{color}}>{node.title}{addInfo}</span>),
       subtitle:(<span style={{}}>{node.subtitle}</span>),
       buttons,
     }
@@ -488,7 +495,7 @@ export default class TeamTree extends Component {
               fluid
               selection
               value={teamType}
-              onChange={(e,{value})=> this.setState({teamType: value})}
+              onChange={(_e,{value})=> this.setState({teamType: value})}
             />
           </Form.Field>
         </Form>

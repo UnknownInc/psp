@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import { Header, Button, Icon, Message, 
-  Segment, Table, Checkbox, 
+  Segment, Table, Checkbox, Dropdown,
   Popup, Modal, Form, FormButton, Label, Menu, 
   Accordion, Input, Progress } from 'semantic-ui-react';
 import { isNullOrUndefined } from 'util';
@@ -36,11 +36,12 @@ class AdminUsersPage extends Component {
     this.state={
       loading: true,
       offset:0,
-      limit: 25,
+      limit: 500,
       users:[],
       totalUsersCount: 0,
       sortColumn:'name',
-      sortDirection:1
+      sortDirection:1,
+      tagsFilter:[],
     }
   }
 
@@ -90,7 +91,7 @@ class AdminUsersPage extends Component {
     try {
       this.setState({loading: true, error:null});
       const headers=getHeaders();
-      let url = `/api/user?offset=${this.state.offset}&limit=${this.state.limit}&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`;
+      let url = `/api/user?offset=${this.state.offset}&limit=${this.state.limit}&tags=${this.state.tagsFilter.join(',')}&sort=${this.state.sortDirection[0]==='d'?'-':''}${this.state.sortColumn}`;
       if ( isNotEmpty(this.state.nameFilter)) {
         url+=`&name=${this.state.nameFilter}`
       }
@@ -363,6 +364,26 @@ class AdminUsersPage extends Component {
                   <label>Title</label>
                   <OptionsDropdown opname='title' value={this.state.titleFilter} selection clearable
                     onChange={(_,{value})=>this.setState({titleFilter: value})}/>
+                </Form.Field>
+                <Form.Field>
+                <label>
+                  Tags:
+                  </label>
+                  <Dropdown
+                    options={this.state.tagsOptions}
+                    placeholder='Choose Tags'
+                    search
+                    selection
+                    fluid
+                    multiple
+                    allowAdditions
+                    value={this.state.tagsFilter}
+                    onAddItem={ (_, { value }) => {
+                      this.setState(prevState => ({
+                        tagsOptions: [{ text: value, value }, ...prevState.tagsOptions],
+                      }))
+                    }}
+                    onChange={(_, { value }) => this.setState({ tagsFilter: value })}/>
                 </Form.Field>
               </Form.Group>
               <Form.Group>
