@@ -190,7 +190,7 @@ export default class QuestionController {
     }
 
     const {questionSet, question, response} = req.body;
-    let rdate = req.body.date? moment(req.body.date).utc():moment().utc();
+    let rdate = (req.body.date?moment(req.body.date):moment()).utc();
     if (IsNullOrEmpty(questionSet) ||
           IsNullOrEmpty(question) || IsNullOrEmpty(response)) {
       this.logger.warn('bad submittion', req.body);
@@ -282,6 +282,7 @@ export default class QuestionController {
         if (rdate.dayOfYear()!=moment(qs.date).dayOfYear()) {
           rdate=moment(qs.date);
         }
+        this.logger.debug(rdate.toString()+' - '+rdate.toString());
         await this._addQEvent(qs, r.response, r.user, rdate);
         count--;
         if (count==0) {
@@ -333,17 +334,23 @@ export default class QuestionController {
     parents = await Node.find({children: {'$in': userid}, type: 'ProjectTeam'});
     groups.projectteam = parents.map((n)=>`${n.user}`);
 
+    await this.eventsdb.sh.query(`
+      DELETE FROM events WHERE 
+      source_id = '${userid.toString()}' AND 
+      event_ref = '${qs._id.toString()}' AND 
+      date_part('doy', time) = date_part('doy', TIMESTAMP '${rdate.format('YYYY-MM-DD hh:mm:ss')}')
+    `);
+
     const iquery = `
-      INSERT INTO events ("source_id", "groups", "event_type", "event_ref",
-      "time", "event_data", "value", "category")
+      INSERT INTO events ("source_id", "event_ref", "time", 
+      "groups", "event_type", "event_data", "value", "category")
       VALUES 
-      ('${userid.toString()}', '${JSON.stringify(groups)}', 'q', 
-        '${qs._id.toString()}','${rdate.format('YYYY-MM-DD hh:mm:ss')}', 
-        '${edata}','${responseValue}','${category}')
+      ('${userid.toString()}', '${qs._id.toString()}','${rdate.format('YYYY-MM-DD hh:mm:ss')}',
+      '${JSON.stringify(groups)}', 'q', '${edata}','${responseValue}','${category}')
       ON CONFLICT DO NOTHING;
     `;
     // this.logger.info(iquery);
-    this.eventsdb.sh.query(iquery);
+    await this.eventsdb.sh.query(iquery);
   }
 
   /**

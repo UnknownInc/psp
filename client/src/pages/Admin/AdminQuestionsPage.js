@@ -56,7 +56,7 @@ class AdminQuestionsPage extends Component {
       isNotAuthorized: true,
       allSelected: false,
       offset:0,
-      limit:125,
+      limit:500,
       totalUsersCount: 0,
       sortColumn:'question',
       sortDirection:'ascending',

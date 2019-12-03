@@ -1,6 +1,7 @@
 import VError from 'verror';
 import APIResource from './APIResource';
 import uuidv1 from 'uuid/v1'
+import moment from 'moment';
 
 const userService = new APIResource({resourceName:'user'})
 
@@ -9,7 +10,7 @@ export default class User {
     this.set(data);
   }
 
-  set({ _id, name, email, title, capability, industry, primarySkill, skills, clients, careerStage, oid, tags, details}) {
+  set({ _id, name, email, title, capability, industry, primarySkill, skills, clients, careerStage, oid, tags, details, roles, isVerified, lastresponsedate}) {
     this._id=_id||('new'+uuidv1());
     this.name=name
     this.email=email;
@@ -23,7 +24,9 @@ export default class User {
     this.oid = oid;
     this.tags = tags;
     this.details = details;
-    this.roles= this.roles;
+    this.roles= roles;
+    this.isVerified = isVerified;
+    this.lastresponsedate = lastresponsedate ? moment(lastresponsedate) : null;
     return this;
   }
 
@@ -41,7 +44,7 @@ export default class User {
       careerStage: this.careerStage,
       oid: this.oid,
       tags: this.tags,
-      details: this.details,
+      details: this.details
     }
   }
 
