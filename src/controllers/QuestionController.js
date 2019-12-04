@@ -348,6 +348,9 @@ export default class QuestionController {
     parents = await Node.find({children: {'$in': user._id}, type: 'ProjectTeam'});
     groups.projectteam = parents.map((n)=>`${n.user}`);
 
+    parents = await Node.find({children: {'$in': user._id}, type: 'Community'});
+    groups.community = parents.map((n)=>`${n.user}`);
+
     await this.eventsdb.sh.query(`
       DELETE FROM events WHERE 
       source_id = '${user._id.toString()}' AND 

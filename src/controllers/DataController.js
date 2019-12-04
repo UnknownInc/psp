@@ -200,6 +200,8 @@ export default class DataController {
       this.logger.debug(team.rows);
       team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'mentees'});
       this.logger.debug(team.rows);
+      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'community'});
+      this.logger.debug(team.rows);
 
       if (user._id.toString()!==req.query.u) {
         return res.status(403).json({
