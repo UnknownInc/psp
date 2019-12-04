@@ -39,8 +39,8 @@ export default class DashboardPage extends Component {
     try {
       usersSummary = await Data.getUserSummary();
       console.log(usersSummary);
-
-      const data = await Data.getQuestionsSummary({startDate:this.state.startDate, endDate:this.state.endDate});
+      const allData = await Data.getQuestionsSummary({startDate:this.state.startDate, endDate:this.state.endDate});
+      const data = allData.company;
       data.forEach(r=>{
         const dt =  moment.utc(r.day);
         const N=parseInt(r.count);

@@ -83,7 +83,8 @@ export default class DataController {
         category, 
         histogram(value, 20.0, 80.0, 3) as dist, 
         avg(value) as average,
-        count(e.source_id) as count
+        count(e.source_id) as count,
+        event_ref as eid
       FROM events e
       INNER JOIN (
         WITH RECURSIVE team AS (
@@ -108,7 +109,7 @@ export default class DataController {
 
       WHERE e.event_type='${eventType}' AND
           e.time>'${startDate}' AND e.time<'${endDate}' 
-      GROUP by category, interval
+      GROUP by eid, category, interval
       ORDER by interval;
     `;
 
@@ -142,7 +143,11 @@ export default class DataController {
     const eventType = req.params.eventType.toLowerCase();
     switch (eventType) {
       case 'q':
-        return this.getQuestionsSummary(req, res);
+        if (req.query.u) {
+          return this.getTeamQuestionsSummary(req, res);
+        } else {
+          return this.getQuestionsSummary(req, res);
+        }
       case 'u':
         return this.getUsersSummary(req, res);
       default:
@@ -167,10 +172,55 @@ export default class DataController {
           error: 'Unknown user',
         });
       }
-    } catch (ex) {
+
+      if (user._id.toString()!==req.query.u) {
+        return res.status(403).json({
+          error: 'Different user',
+        });
+      }
+
+      const eventType = req.params.eventType.toLowerCase();
+      if (eventType!=='q') {
+        return res.status(400).json({
+          error: `Bad value for event type: ${req.params.eventType}`,
+        });
+      }
+
+      let startDate;
+      if (req.query.startDate) {
+        if (moment(req.query.startDate).isValid()===false) {
+          return res.status(400).json({
+            error: `Bad value for startDate: ${req.query.startDate}`,
+          });
+        }
+        startDate = moment(req.query.startDate).format('YYYY-MM-DD');
+      }
+      let endDate;
+      if (req.query.endDate) {
+        if (moment(req.query.endDate).isValid()===false) {
+          return res.status(400).json({
+            error: `Bad value for endDate: ${req.query.endDate}`,
+          });
+        }
+        endDate = moment(req.query.endDate).format('YYYY-MM-DD');
+      } else {
+        endDate = moment().format('YYYY-MM-DD');
+      }
+      const uid = req.query.u;
+      const trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'reportees'});
+      const QuestionSet = this.database.QuestionSet;
+      const questions = await QuestionSet.find({_id: {'$in': results.rows.map((r)=>r.qsid)}});
+      trResults.rows.forEach((r)=>{
+        const match = questions.filter((q)=>q._id==r.qsid);
+        r.questionset=match[0];
+      });
+
+      const output = {reportees: trResults.rows};
+      return res.json(output);
+    } catch (err) {
       this.logger.error(err);
       return res.status(500).json({
-        error: 'Unable to return team quetsion summary',
+        error: 'Unable to return team question summary',
       });
     }
   }
@@ -223,6 +273,7 @@ export default class DataController {
         endDate = moment().format('YYYY-MM-DD');
       }
 
+
       let query =`SELECT 
           time::DATE as day, 
           COUNT(*) as count, 
@@ -248,7 +299,9 @@ export default class DataController {
         const match = questions.filter((q)=>q._id==r.qsid);
         r.questionset=match[0];
       });
-      return res.json(results.rows);
+
+      const output = {company: results.rows};
+      return res.json(output);
     } catch (err) {
       this.logger.error(err);
       return res.status(500).json({

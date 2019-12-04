@@ -10,6 +10,7 @@ import { Sparklines, SparklinesLine,SparklinesSpots,SparklinesReferenceLine } fr
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import Team from '../../domain/Team';
 import OptionsDropdown from '../../components/OptionsDropdown';
+import Data from '../../domain/Data';
 
 const intervalOptions =[
   {key: 'last_week', text:'Last week', value:'7'},
@@ -35,10 +36,11 @@ class ReportsPage extends Component {
   async componentDidMount(){
     this.setState({loading: true})
     let error = null;
+    let userid;
     let teams =[];
     try {
       console.log(this.props.location)
-      let userid = this.state.userid;
+      userid = this.state.userid;
       if (!userid) {
         const {profile} = await getProfile()
         userid = profile._id;
@@ -51,7 +53,7 @@ class ReportsPage extends Component {
         cause: VError.cause(err),
       }
     } finally {
-      this.setState({loading: false, teams, error},()=>{
+      this.setState({loading: false, teams, userid, error},()=>{
         this.handleFilterChange()
       })
     }
@@ -75,7 +77,12 @@ class ReportsPage extends Component {
     const {selectedInterval}=this.state;
     if (true){
       this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
-      setTimeout(()=>{
+      setTimeout(async ()=>{
+        const startDate=moment().subtract('d', selectedInterval.value);
+        const endDate=moment()
+        const allData = await Data.getTeamQuestionsSummary({uid: this.state.userid ,startDate, endDate});
+        const data = allData.company;
+
         const summary={ aggregates:{category:[], top:[], bottom:[]}};
         const categoryAggregates=[
           {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
