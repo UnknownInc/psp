@@ -59,7 +59,7 @@ export default class DataController {
       ) SELECT t.day, array_agg(t.user) as users  from team t group by t.day;
     `;
     this.logger.trace(query);
-    const result = await sh.query(query);
+    const result = await this.eventsdb.sh.query(query);
     console.timeEnd('get children on date');
     return result;
   }
@@ -173,19 +173,6 @@ export default class DataController {
         });
       }
 
-      if (user._id.toString()!==req.query.u) {
-        return res.status(403).json({
-          error: 'Different user',
-        });
-      }
-
-      const eventType = req.params.eventType.toLowerCase();
-      if (eventType!=='q') {
-        return res.status(400).json({
-          error: `Bad value for event type: ${req.params.eventType}`,
-        });
-      }
-
       let startDate;
       if (req.query.startDate) {
         if (moment(req.query.startDate).isValid()===false) {
@@ -206,16 +193,52 @@ export default class DataController {
       } else {
         endDate = moment().format('YYYY-MM-DD');
       }
+
+      let team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'reportees'});
+      this.logger.debug(team.rows);
+      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'projectteam'});
+      this.logger.debug(team.rows);
+      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'mentees'});
+      this.logger.debug(team.rows);
+
+      if (user._id.toString()!==req.query.u) {
+        return res.status(403).json({
+          error: 'Not authorized',
+        });
+      }
+
+      const eventType = req.params.eventType.toLowerCase();
+      if (eventType!=='q') {
+        return res.status(400).json({
+          error: `Bad value for event type: ${req.params.eventType}`,
+        });
+      }
+
       const uid = req.query.u;
-      const trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'reportees'});
       const QuestionSet = this.database.QuestionSet;
-      const questions = await QuestionSet.find({_id: {'$in': results.rows.map((r)=>r.qsid)}});
+
+      const trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'reportees'});
+      let questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
       trResults.rows.forEach((r)=>{
         const match = questions.filter((q)=>q._id==r.qsid);
         r.questionset=match[0];
       });
 
-      const output = {reportees: trResults.rows};
+      const tpResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'projectteam'});
+      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
+      tpResults.rows.forEach((r)=>{
+        const match = questions.filter((q)=>q._id==r.qsid);
+        r.questionset=match[0];
+      });
+
+      const tmResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'mentees'});
+      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
+      tmResults.rows.forEach((r)=>{
+        const match = questions.filter((q)=>q._id==r.qsid);
+        r.questionset=match[0];
+      });
+
+      const output = {reportees: trResults.rows, projectteam: tpResults.rows, mentees: tmResults.rows};
       return res.json(output);
     } catch (err) {
       this.logger.error(err);
