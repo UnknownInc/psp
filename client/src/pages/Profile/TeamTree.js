@@ -117,10 +117,10 @@ export default class TeamTree extends Component {
 
       treeData = changeNodeAtPath({
         treeData: treeData,
-        path: epath,
+        path: epath, //epath,
         newNode:this._getTreeData([team])[0],
         getNodeKey: this.getNodeKey,
-        ignoreCollapsed: false
+        ignoreCollapsed: true
       })
 
     } catch(err) {
@@ -295,13 +295,11 @@ export default class TeamTree extends Component {
     const user = node.o;
     let treeData = this.state.treeData;
     try{
-      console.log(path);
       const pnode= getNodeAtPath({
         treeData: treeData,
         path:path.slice(0,path.length-1),
         getNodeKey: this.getNodeKey,
       }).node;
-      console.log(pnode);
       let tname;
       if (pnode.o.type==='Community') {
         tname=pnode.o.name;
@@ -438,7 +436,7 @@ export default class TeamTree extends Component {
     return {
       style:{backgroundColor:'lightgray'},
     title: (<span style={{color}}>{node.title}{addInfo}</span>),
-      subtitle:(<span style={{}}>{node.subtitle}</span>),
+      subtitle:(<span style={{color}}>{node.subtitle}</span>),
       buttons,
     }
   }

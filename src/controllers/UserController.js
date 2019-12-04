@@ -153,9 +153,11 @@ export default class UserController {
       });
 
       if (req.query.sort==='lastresponsedate') {
-        results=results.sort((a, b)=> (new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
+        results=results.sort((a, b)=> (
+          new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
       } else if (req.query.sort==='-lastresponsedate') {
-        results=results.sort((a, b)=>(new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
+        results=results.sort((a, b)=>(
+          new Date(b.lastresponsedate) - new Date(a.lastresponsedate)));
       }
 
       res.set('X-Total-Count', ''+count);
@@ -520,13 +522,14 @@ export default class UserController {
           this.config.jwtsecret,
           {
             expiresIn: '365d',
-          }
+          },
       );
 
       // const Node= this.database.Node;
       // try {
       //   // eslint-disable-next-line new-cap
-      //   const n = await Node.findOne({user: ObjectId(user._id), type: 'default'});
+      //   const n = await Node.findOne({user: ObjectId(user._id),
+      // type: 'default'});
       //   if (!n) {
       //     // eslint-disable-next-line new-cap
       //     const n = new Node({user: ObjectId(user._id), type: 'default'});

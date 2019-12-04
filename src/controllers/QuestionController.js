@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable new-cap */
 import moment from 'moment';
+import { EDESTADDRREQ } from 'constants';
 const {Router} = require('express');
 const mongoose = require('mongoose');
 
@@ -243,7 +244,7 @@ export default class QuestionController {
       u.lastresponsedate = moment.utc().toDate();
       await u.save();
 
-      await this._addQEvent(qs, response, user._id, rdate);
+      await this._addQEvent(qs, response, u, rdate);
 
       return res.sendStatus(200);
     } catch (err) {
@@ -274,7 +275,7 @@ export default class QuestionController {
     const QuestionSet = this.database.QuestionSet;
     const Response = this.database.Response;
     try {
-      const allRes=await Response.find({});
+      const allRes=await Response.find({}).populate('user');
       let count=allRes.length;
       allRes.forEach(async (r)=>{
         const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
@@ -299,10 +300,10 @@ export default class QuestionController {
    * add question answer events to events table
    * @param {questionSet} qs
    * @param {string} response response for the question, (option selected)
-   * @param {ObjectId} userid
+   * @param {Object} user
    * @param {moment} rdate
    */
-  async _addQEvent(qs, response, userid, rdate) {
+  async _addQEvent(qs, response, user, rdate) {
     const q = qs.questions[0];
     const category = q.category;
     let resIdx=0;
@@ -320,23 +321,39 @@ export default class QuestionController {
 
     let edata={};
     edata.response=response;
+    edata.user=user.toObject();
+
+    edata.user.__v=undefined;
+    edata.user._id=undefined;
+    edata.user.email=undefined;
+    edata.user.name=undefined;
+    edata.user.lastactivedate=undefined;
+    edata.user.lastresponsedate=undefined;
+    edata.user.isAdmin=undefined;
+    edata.user.company=undefined;
+    edata.user.isVerified=undefined;
+    edata.user.roles=undefined;
+
     edata = JSON.stringify(edata);
 
     const Node = this.database.Node;
 
     const groups={};
-    let parents = await Node.find({children: {'$in': userid}, type: 'Reportees'});
+    let parents = await Node.find({children: {'$in': user._id}, type: 'Reportees'});
     groups.reportees = parents.map((n)=>`${n.user}`);
 
-    parents = await Node.find({children: {'$in': userid}, type: 'Mentees'});
+    parents = await Node.find({children: {'$in': user._id}, type: 'Mentees'});
     groups.mentees = parents.map((n)=>`${n.user}`);
 
-    parents = await Node.find({children: {'$in': userid}, type: 'ProjectTeam'});
+    parents = await Node.find({children: {'$in': user._id}, type: 'ProjectTeam'});
     groups.projectteam = parents.map((n)=>`${n.user}`);
+
+    parents = await Node.find({children: {'$in': user._id}, type: 'Community'});
+    groups.community = parents.map((n)=>`${n.user}`);
 
     await this.eventsdb.sh.query(`
       DELETE FROM events WHERE 
-      source_id = '${userid.toString()}' AND 
+      source_id = '${user._id.toString()}' AND 
       event_ref = '${qs._id.toString()}' AND 
       date_part('doy', time) = date_part('doy', TIMESTAMP '${rdate.format('YYYY-MM-DD hh:mm:ss')}')
     `);
@@ -345,7 +362,7 @@ export default class QuestionController {
       INSERT INTO events ("source_id", "event_ref", "time", 
       "groups", "event_type", "event_data", "value", "category")
       VALUES 
-      ('${userid.toString()}', '${qs._id.toString()}','${rdate.format('YYYY-MM-DD hh:mm:ss')}',
+      ('${user._id.toString()}', '${qs._id.toString()}','${rdate.format('YYYY-MM-DD hh:mm:ss')}',
       '${JSON.stringify(groups)}', 'q', '${edata}','${responseValue}','${category}')
       ON CONFLICT DO NOTHING;
     `;
