@@ -117,10 +117,10 @@ export default class TeamTree extends Component {
 
       treeData = changeNodeAtPath({
         treeData: treeData,
-        path: epath,
+        path: epath, //epath,
         newNode:this._getTreeData([team])[0],
         getNodeKey: this.getNodeKey,
-        ignoreCollapsed: false
+        ignoreCollapsed: true
       })
 
     } catch(err) {

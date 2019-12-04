@@ -7,7 +7,11 @@ const userService = new APIResource({resourceName:'user'})
 
 export default class User {
   constructor(data){
-    this.set(data);
+    if (typeof data === 'string') {
+      this._id=data;
+    } else {
+      this.set(data);
+    }
   }
 
   set({ _id, name, email, title, capability, industry, primarySkill, skills, clients, careerStage, oid, tags, details, roles, isVerified, lastresponsedate}) {
