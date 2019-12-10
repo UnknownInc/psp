@@ -25,8 +25,7 @@ export default class DashboardPage extends Component {
       startDate:moment().subtract(180,'d'),
       endDate:moment(),
       focusedInput:null,
-      responseRates:[
-      ],
+      responseRates:[],
       questionHistory:[],
     }
   }
@@ -85,7 +84,7 @@ export default class DashboardPage extends Component {
   }
 
   _getChartOptions=()=>{
-    const {data0={}, responseRates=[]} = this.state;
+    const {data0={}} = this.state;
     function calculateMA(dayCount, data) {
       var result = [];
       for (var i = 0, len = data.length; i < len; i++) {
@@ -98,6 +97,17 @@ export default class DashboardPage extends Component {
               sum += data[i - j][1];
           }
           result.push([data[i-j][0], sum / dayCount]);
+      }
+      return result;
+    }
+
+    function ravg(data) {
+      if (data.length<1) return [];
+      let avg=data[0][1];
+      var result = [];
+      for (var i = 1, len = data.length; i < len; i++) {
+        avg=(avg*i + data[i][1])/(i+1);
+        result.push([data[i][0], avg]);
       }
       return result;
     }
@@ -157,7 +167,7 @@ export default class DashboardPage extends Component {
       options.series.push({
         name: c,
         type: 'line',
-        data: calculateMA(1,data0[c].data),
+        data: ravg(data0[c].data),
         smooth: true,
         lineStyle: {
           normal: {opacity: 0.5}
