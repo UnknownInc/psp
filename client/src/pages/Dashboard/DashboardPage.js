@@ -1,4 +1,8 @@
 import React, {Component} from 'react';
+import ReactEcharts from 'echarts-for-react';  // or var ReactEcharts = require('echarts-for-react');
+import echarts from 'echarts/lib/echarts';
+import 'echarts/lib/chart/line';
+import 'echarts/lib/chart/candlestick';
 
 import Page from '../../components/Page';
 import moment from 'moment';
@@ -18,7 +22,7 @@ export default class DashboardPage extends Component {
     super(props);
     this.state={
       loading: false,
-      startDate:moment().subtract(90,'d'),
+      startDate:moment().subtract(180,'d'),
       endDate:moment(),
       focusedInput:null,
       responseRates:[
@@ -35,6 +39,7 @@ export default class DashboardPage extends Component {
     const responseRates=[];
     const questionHistory=[];
     let usersSummary={};
+    let data0={ }
 
     try {
       usersSummary = await Data.getUserSummary();
@@ -49,6 +54,9 @@ export default class DashboardPage extends Component {
           date:dt.toDate(),
           value: avg
         })
+        let cdata=data0[r.questionset.questions[0].category]||{data:[]};
+        cdata.data.push([dt.format('YYYY/MM/DD'), Math.round(r.average),N,...r.dist]);
+        data0[r.questionset.questions[0].category]=cdata;
 
         questionHistory.push({
           1: r.dist[0],
@@ -73,7 +81,91 @@ export default class DashboardPage extends Component {
         }
       })
     }
-    this.setState({responseRates, questionHistory, usersSummary});
+    this.setState({responseRates, questionHistory, usersSummary, data0});
+  }
+
+  _getChartOptions=()=>{
+    const {data0={}, responseRates=[]} = this.state;
+    function calculateMA(dayCount, data) {
+      var result = [];
+      for (var i = 0, len = data.length; i < len; i++) {
+          if (i < dayCount) {
+              result.push('-');
+              continue;
+          }
+          var sum = 0;
+          for (var j = 0; j < dayCount; j++) {
+              sum += data[i - j][1];
+          }
+          result.push([data[i-j][0], sum / dayCount]);
+      }
+      return result;
+    }
+    const options={
+      title: {
+          text: 'Trend',
+          left: 0
+      },
+      tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+              type: 'cross'
+          }
+      },
+      legend: {
+          data: []
+      },
+      grid: {
+          left: '10%',
+          right: '10%',
+          bottom: '15%'
+      },
+      xAxis: {
+          type: 'time',
+          scale: true,
+          boundaryGap : false,
+          axisLine: {onZero: false},
+          splitLine: {show: false},
+          splitNumber: 20,
+          min: 'dataMin',
+          max: 'dataMax'
+      },
+      yAxis: {
+          scale: true,
+          splitArea: {
+              show: true
+          }
+      },
+      dataZoom: [
+          {
+              type: 'inside',
+              start: 0,
+              end: 100
+          },
+          {
+              show: true,
+              type: 'slider',
+              y: '90%',
+              start: 0,
+              end: 100
+          }
+      ],
+      series: [],
+    };
+    Object.keys(data0).forEach((c)=>{
+      options.legend.data.push(c);
+      options.series.push({
+        name: c,
+        type: 'line',
+        data: calculateMA(1,data0[c].data),
+        smooth: true,
+        lineStyle: {
+          normal: {opacity: 0.5}
+        },
+      });
+    });
+    console.log(options);
+    return options;
   }
 
   renderError() {
@@ -154,6 +246,18 @@ export default class DashboardPage extends Component {
           </Statistic>
         </Statistic.Group>
         {this.replayButton()}
+        <br/>
+        <ReactEcharts 
+          echarts={echarts}
+          option={this._getChartOptions()}
+          notMerge={true}
+          lazyUpdate={true}
+          // theme={"theme_name"}
+          // onChartReady={this.onChartReadyCallback}
+          // onEvents={EventsDict}
+          opts={{}} 
+          style={{height:'250px', width: '100%'}}
+        />
         <br/>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>
         <DivergingStackedBarPlot data={this.state.questionHistory} height={Math.max(360,this.state.questionHistory.length*50+60)}/>
