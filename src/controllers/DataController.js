@@ -74,9 +74,16 @@ export default class DataController {
     startDate=(onemonthback.format('YYYY-MM-DD')),
     endDate=(today.format('YYYY-MM-DD')),
     interval='1 day',
-    groupName='reportees',
+    groupName='any',
   }) {
     console.time('team aggregate');
+    let condition = (feild, groups)=>`('${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'${groupName}')) ) )`;
+    if (groupName=='any') {
+      condition = (feild, groups)=>`( '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'reportees')) ) OR
+        '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'mentees')) ) OR
+        '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'projectTeam')) )
+      )`;
+    }
     const query = `
       SELECT 
         time_bucket('${interval}', time) AS interval,
@@ -94,14 +101,16 @@ export default class DataController {
           FROM
             events
           WHERE
-            '${uid}' = ANY( ARRAY(SELECT jsonb_array_elements_text(groups->'${groupName}')) )
+            ${condition(uid, 'groups')}
           UNION
             SELECT
               e.source_id as user,
               time::Date as day
             FROM
               events e
-            INNER JOIN team t ON t.user = ANY( ARRAY(SELECT jsonb_array_elements_text(e.groups->'${groupName}')) ) AND e.time::DATE = t.day
+            INNER JOIN team t ON 
+              ${condition('t.user', 'e.groups')}
+              AND e.time::DATE = t.day
           )
           select t.day, array_agg(t.user) as users  from team t group by t.day
       ) ta
@@ -194,14 +203,14 @@ export default class DataController {
         endDate = moment().format('YYYY-MM-DD');
       }
 
-      let team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'reportees'});
-      this.logger.debug(team.rows);
-      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'projectteam'});
-      this.logger.debug(team.rows);
-      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'mentees'});
-      this.logger.debug(team.rows);
-      team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'community'});
-      this.logger.debug(team.rows);
+      // let team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'reportees'});
+      // this.logger.debug(team.rows);
+      // team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'projectteam'});
+      // this.logger.debug(team.rows);
+      // team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'mentees'});
+      // this.logger.debug(team.rows);
+      // team = await this._getChildren(user._id.toString(), {startDate, endDate, groupName: 'community'});
+      // this.logger.debug(team.rows);
 
       if (user._id.toString()!==req.query.u) {
         return res.status(403).json({
@@ -220,23 +229,23 @@ export default class DataController {
       const QuestionSet = this.database.QuestionSet;
 
       const trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'reportees'});
-      let questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
+      let questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
       trResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.qsid);
+        const match = questions.filter((q)=>q._id==r.eid);
         r.questionset=match[0];
       });
 
       const tpResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'projectteam'});
-      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
+      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
       tpResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.qsid);
+        const match = questions.filter((q)=>q._id==r.eid);
         r.questionset=match[0];
       });
 
       const tmResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'mentees'});
-      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.qsid)}});
+      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
       tmResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.qsid);
+        const match = questions.filter((q)=>q._id==r.eid);
         r.questionset=match[0];
       });
 
