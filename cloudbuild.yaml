@@ -37,6 +37,7 @@ steps:
   - '-c'
   - |
     docker pull gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest || exit 0
+  dir: "psp"
 # build the container image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', 

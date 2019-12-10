@@ -39,7 +39,8 @@ export default class DashboardPage extends Component {
     const questionHistory=[];
     let usersSummary={};
     let data0={ }
-
+    let echarts_instance = this.echarts_react.getEchartsInstance();
+    echarts_instance.showLoading();
     try {
       usersSummary = await Data.getUserSummary();
       console.log(usersSummary);
@@ -81,6 +82,7 @@ export default class DashboardPage extends Component {
       })
     }
     this.setState({responseRates, questionHistory, usersSummary, data0});
+    echarts_instance.hideLoading();
   }
 
   _getChartOptions=()=>{
@@ -114,7 +116,7 @@ export default class DashboardPage extends Component {
     const options={
       title: {
           text: 'Trend',
-          left: 0
+          left: '0',
       },
       tooltip: {
           trigger: 'axis',
@@ -123,12 +125,17 @@ export default class DashboardPage extends Component {
           }
       },
       legend: {
-          data: []
+          data: [],
+          type: 'scroll',
+          orient: 'vertical',
+          right: 0,
+          top: 20,
+          bottom: 20,
       },
       grid: {
-          left: '10%',
-          right: '10%',
-          bottom: '15%'
+          left: '0%',
+          right: '20%',
+          bottom: '25%'
       },
       xAxis: {
           type: 'time',
@@ -144,7 +151,9 @@ export default class DashboardPage extends Component {
           scale: true,
           splitArea: {
               show: true
-          }
+          },
+          min:0,
+          max:105,
       },
       dataZoom: [
           {
@@ -156,7 +165,7 @@ export default class DashboardPage extends Component {
               show: true,
               type: 'slider',
               y: '90%',
-              start: 0,
+              start: 50,
               end: 100
           }
       ],
@@ -257,7 +266,7 @@ export default class DashboardPage extends Component {
         </Statistic.Group>
         {this.replayButton()}
         <br/>
-        <ReactEcharts 
+        <ReactEcharts ref={(e) => { this.echarts_react = e; }}
           echarts={echarts}
           option={this._getChartOptions()}
           notMerge={true}
@@ -266,7 +275,7 @@ export default class DashboardPage extends Component {
           // onChartReady={this.onChartReadyCallback}
           // onEvents={EventsDict}
           opts={{}} 
-          style={{height:'250px', width: '100%'}}
+          style={{height:'300px', width: '100%'}}
         />
         <br/>
         <span style={{fontSize: "1.5em"}}>Latest Questions:</span>

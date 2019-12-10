@@ -1,5 +1,5 @@
-ARG BUILDID
-ARG COMMITID
+# ARG BUILDID
+# ARG COMMITID
 
 FROM node:12.13.0-alpine AS build
 RUN apk add --update --no-cache \
@@ -19,13 +19,6 @@ RUN npm install
 COPY . ./
 
 RUN npm run build
-
-ARG BUILDID='000'
-ARG COMMITID='XXX'
-
-RUN date > BUILD_DATE
-RUN echo ${BUILDID} > BUILD_ID
-RUN echo ${COMMITID} > COMMIT_ID
 
 RUN rm -rf node_modules
 
@@ -57,6 +50,13 @@ RUN apk add --update --no-cache curl
 WORKDIR /usr/src/app
 
 COPY --from=build /psp .
+
+ARG BUILDID='000'
+ARG COMMITID='XXX'
+
+RUN date > BUILD_DATE
+RUN echo ${BUILDID} > BUILD_ID
+RUN echo ${COMMITID} > COMMIT_ID
 
 # Install production dependencies.
 RUN npm install --only=production
