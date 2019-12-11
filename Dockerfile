@@ -1,12 +1,13 @@
 # ARG BUILDID
 # ARG COMMITID
-
-FROM node:12.13.0-alpine AS build
+FROM node:12.13.0-alpine AS base
 RUN apk add --update --no-cache \
     python \
     git \
     make \
     g++
+
+FROM base AS build
 
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure both package.json AND package-lock.json are copied.
@@ -22,12 +23,7 @@ RUN npm run build
 
 RUN rm -rf node_modules
 
-FROM node:12.13.0-alpine AS uibuild
-RUN apk add --update --no-cache \
-    python \
-    git \
-    make \
-    g++
+FROM base AS uibuild
 
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure both package.json AND package-lock.json are copied.
@@ -62,6 +58,9 @@ RUN echo ${COMMITID} > COMMIT_ID
 RUN npm install --only=production
 
 COPY --from=uibuild /client/build ./client/build
+
+# RUN addgroup -S nodejs && adduser -G -S nodejs nodejs
+# USER nodejs
 
 # Run the web service on container startup.
 CMD [ "npm", "start" ]

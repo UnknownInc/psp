@@ -2,14 +2,14 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const statusMonitor = require('express-status-monitor');
+// const statusMonitor = require('express-status-monitor');
 const cors = require('cors');
 const methodOverride = require('method-override');
 
 // module.exports = ({ config, containerMiddleware,
 // loggerMiddleware, errorHandler, swaggerMiddleware }) => {
 module.exports = ({config, logger, cache, database, eventsdb,
-  containerMiddleware, loggerMiddleware, userAuthorizationMiddleware,
+  containerMiddleware, loggerMiddleware,
   userController, questionController, teamController,
   optionsController, questionSetController, dataController,
 }) => {
@@ -20,7 +20,7 @@ module.exports = ({config, logger, cache, database, eventsdb,
 
   /* istanbul ignore if */
   if (config.env === 'development') {
-    router.use(statusMonitor());
+    // router.use(statusMonitor());
   }
 
   /* istanbul ignore if */
@@ -48,9 +48,9 @@ module.exports = ({config, logger, cache, database, eventsdb,
   apiRouter.use('/options', optionsController.router);
   apiRouter.use('/data', dataController.router);
 
-  router.get('/ping', (req, res)=> res.send('pong'));
+  router.get('/ping', (_req, res)=> res.send('pong'));
 
-  router.get('/_status', (req, res)=>{
+  router.get('/_status', (_req, res)=>{
     res.json({
       buildInfo: {...config.buildInfo},
       service: process.env['K_SERVICE'],
@@ -61,7 +61,7 @@ module.exports = ({config, logger, cache, database, eventsdb,
     });
   });
 
-  router.get('*', (req, res) => {
+  router.get('*', (_req, res) => {
     res.sendFile(path.join(__dirname, '../../../client/build', 'index.html'));
   });
   // router.use(errorHandler);
