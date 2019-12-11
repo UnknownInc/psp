@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const statusMonitor = require('express-status-monitor');
+//const statusMonitor = require('express-status-monitor');
 const cors = require('cors');
 const methodOverride = require('method-override');
 
@@ -20,7 +20,7 @@ module.exports = ({config, logger, cache, database, eventsdb,
 
   /* istanbul ignore if */
   if (config.env === 'development') {
-    router.use(statusMonitor());
+    // router.use(statusMonitor());
   }
 
   /* istanbul ignore if */
