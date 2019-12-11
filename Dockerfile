@@ -59,8 +59,8 @@ RUN npm install --only=production
 
 COPY --from=uibuild /client/build ./client/build
 
-RUN addgroup -S nodejs && adduser -G -S nodejs nodejs
-USER nodejs
+# RUN addgroup -S nodejs && adduser -G -S nodejs nodejs
+# USER nodejs
 
 # Run the web service on container startup.
 CMD [ "npm", "start" ]
