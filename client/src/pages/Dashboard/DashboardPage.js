@@ -133,7 +133,7 @@ export default class DashboardPage extends Component {
           bottom: 20,
       },
       grid: {
-          left: '0%',
+          left: '10%',
           right: '20%',
           bottom: '25%'
       },
@@ -152,8 +152,8 @@ export default class DashboardPage extends Component {
           splitArea: {
               show: true
           },
-          min:0,
-          max:105,
+          // min:0,
+          // max:100,
       },
       dataZoom: [
           {
