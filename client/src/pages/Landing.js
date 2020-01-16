@@ -6,6 +6,24 @@ import Home from './Home'
 import { Form} from 'semantic-ui-react';
 import Page from '../components/Page';
 import VError from 'verror';
+
+const authority = 'https://login.microsoftonline.com/publicisgroupe.onmicrosoft.com';
+ // initialize MSAL
+const msalConfig = {
+  auth: {
+      clientId: "d615da3b-c313-4e13-a4d6-7ae2547e0386",
+      authority: authority,
+      //authority: "https://login.microsoftonline.com/common",
+      validateAuthority: false
+  },
+  cache: {
+      cacheLocation: "localStorage",
+      storeAuthStateInCookie: false
+  }
+};
+// instantiate MSAL
+const myMSALObj = new global.Msal.UserAgentApplication(msalConfig);
+
 export default class Landing extends Component {
 
   // A bit of state to give the user feedback while their email address is being 
@@ -13,6 +31,8 @@ export default class Landing extends Component {
   state = {
     loading: true,
     loadingMessage: 'Loading...',
+    email:'',
+    code:'',
     iagree: false,
     sendingEmail: false,
     attemptEmail: window.localStorage.getItem('registerAttempt')
@@ -42,11 +62,11 @@ export default class Landing extends Component {
     }
   }
 
-  handleChange = (event, {name, value}) => {
+  handleChange = (_event, {name, value}) => {
     this.setState({[name]: value})
   }
 
-  handleCheckboxChange = (e,{checked})=>{
+  handleCheckboxChange = (_e,{checked})=>{
     this.setState({iagree: checked})
   }
 
@@ -59,7 +79,7 @@ export default class Landing extends Component {
             accept: 'application/json', 
             'content-type': 'application/json'
           },
-          body: JSON.stringify({token: this.state.code.trim(), email: this.state.email.trim()})
+          body: JSON.stringify({token: this.state.code.trim(), email: this.state.email.trim(), accessToken: this.state.accessToken})
         })
       
         if (!res.ok) {
@@ -122,6 +142,33 @@ export default class Landing extends Component {
     }
   }
 
+  psLogin=async ()=>{
+    let loginRequest = {
+      scopes: ["user.read", "profile"],
+      prompt: "select_account",
+      authority:authority,
+    }
+    
+    let accessTokenRequest = {
+        scopes: ["user.read",],
+        authority:authority,
+    }
+
+    try {
+      const loginResponse = await myMSALObj.loginPopup(loginRequest);
+      
+      const accessTokenResponse = await myMSALObj.acquireTokenSilent(accessTokenRequest);
+        // get access token from response
+      const token = accessTokenResponse.accessToken;
+      window.localStorage.setItem('m360at', token);
+      
+      this.setState({accessToken: token},
+          ()=>this.onVerify())
+    } catch(error){
+        console.log(error);
+    };
+  }
+
   renderHome = () =>{
     return <Home profile={this.state.profile}/>
   }
@@ -162,10 +209,13 @@ export default class Landing extends Component {
 
     return (
     <Page loading={sendingEmail}>
-      <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'80vh'}}>
+      <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'80vh', flexDirection:'column'}}>
+        <button className="ui blue button" onClick={this.psLogin}>Publicis Login</button>
+        <div style={{minHeight:'32px'}}></div>
+
         <Form
           onSubmit={this.onSubmit}>
-          <Form.Group>
+          {/* <Form.Group>
             <Form.Input
               placeholder='Your work email'
               name='email'
@@ -178,7 +228,7 @@ export default class Landing extends Component {
               disabled={!iagree }
               action={attemptEmail ? null : {color:'blue', content:'Register'}}
             />
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group>
             <Form.Checkbox
               name='iagree'
