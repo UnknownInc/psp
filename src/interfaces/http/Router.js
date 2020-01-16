@@ -58,7 +58,24 @@ module.exports = ({config, logger, cache, database, eventsdb,
       cache: {...cache.status},
       db: {...database.status},
       edb: {...eventsdb.status},
+      env: (config.env === 'development'?process.env:null),
     });
+  });
+
+  // router.get('/psloginurl', (req, res)=>{
+  //   const url= 'https://login.microsoftonline.com/publicisgroupe.onmicrosoft.com/oauth2/v2.0/authorize?'+
+  //     `client_id=${config.creds.clientID}`+
+  //     `&response_type=id_token`+
+  //     `&redirect_uri=${process.env.BASE_URL}${config.creds.redirectUrl}`+
+  //     `&scope=openid`+
+  //     `&response_mode=fragment`+
+  //     `&state=12345`+
+  //     `&nonce=678910`;
+  //   res.json(url);
+  // });
+
+  router.get(`${config.creds.redirectUrl}`, (_req, res)=>{
+    return res.json({});
   });
 
   router.get('*', (_req, res) => {

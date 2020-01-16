@@ -2,10 +2,10 @@
 const {Router} = require('express');
 import {getEmailParts} from '../common/helpers';
 import moment from 'moment';
+import request from 'request';
 const uuidv4 = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -32,6 +32,7 @@ export default class UserController {
     this.register = this.register.bind(this);
     this.getUsers = this.getUsers.bind(this);
     this.verify = this.verify.bind(this);
+    this.verifyADtoken = this.verifyADtoken.bind(this);
     this.updateUser = this.updateUser.bind(this);
     this.createUser = this.createUser.bind(this);
 
@@ -466,6 +467,108 @@ export default class UserController {
   }
 
   /**
+   * verify the ms graph accessToken
+   * @param {*} req request object
+   * @param {*} res response object
+   * @return {any} nothing
+   */
+  async verifyADtoken(req, res) {
+    const token = (req.body.accessToken||'');
+    if (token==='') {
+      return res.status(400).json({
+        error: 'Expects a valid accessToken in the body',
+      });
+    }
+
+    const bearer = `Bearer ${token}`;
+    this.logger.trace(bearer);
+    const headers = {
+      'Authorization': bearer,
+    };
+    const graphEndpoint = 'https://graph.microsoft.com/v1.0/me';
+    const options = {
+      url: graphEndpoint,
+      headers: headers,
+    };
+
+    request(options, async (err, response, body)=>{
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          Error: 'Unexpected error on the server.',
+        });
+      }
+      this.logger.info(response && response.statusCode);
+      if (!body) {
+        return res.status(500).json({
+          Error: 'Unexpected error on the server.',
+        });
+      }
+
+      const Company = this.database.Company;
+      const User = this.database.User;
+      try {
+        const profile=JSON.parse(body);
+        this.logger.trace(profile);
+        const email=profile.mail.toLowerCase();
+        const payload = getEmailParts(email);
+
+        console.log(payload);
+        const company = await Company.findOne({
+          domains: {'$regex': payload.domain, '$options': 'i'}});
+        if (!company) {
+          return res.status(404).json({
+            error: `Unable to find company: ${payload.companyname}`,
+          });
+        }
+
+        this.logger.debug(company.toObject());
+        if (company.domain.indexOf(payload.domain)!=-1) {
+          return res.status(400).json({
+            // eslint-disable-next-line max-len
+            error: `Invalid domain: ${payload.domain} for company ${payload.companyname}`,
+          });
+        }
+
+        let user = await User.findByEmail(payload.address);
+        if (!user) {
+          /*
+          return res.status(409).json({
+            Error: `User: ${email.accountname} is already registered.`
+          })
+          */
+          user = await User.create({
+            email: payload.address,
+            company: company._id,
+          });
+        }
+        user.isVerified = true;
+        user.name = profile.displayName;
+        // user.title=profile.jobTitle;
+
+        await user.save();
+
+        const userObj = {email, username: email.substr(0, email.indexOf('@'))};
+        const authtoken = jwt.sign(userObj,
+            this.config.jwtsecret,
+            {
+              expiresIn: '365d',
+            },
+        );
+        return res.status(200).json({
+          message: 'Successfully verified.',
+          token: authtoken,
+        });
+      } catch (ex) {
+        return res.status(500).json({
+          Error: 'Unexpected error on the server.',
+        });
+      }
+      // return res.json({});
+    });
+  }
+
+  /**
    * verify the token
    * @param {*} req request object
    * @param {*} res response object
@@ -474,6 +577,10 @@ export default class UserController {
   async verify(req, res) {
     this.logger.trace('verify');
 
+    if (req.body.accessToken) {
+      await this.verifyADtoken(req, res);
+      return;
+    }
     const token = (req.body.token||'').trim().toLowerCase();
     const email = (req.body.email||'').trim().toLowerCase();
 

@@ -30,7 +30,7 @@ class ProfilePage extends Component {
         cause: VError.cause(err),
       }
     } finally {
-      this.setState({loading: false, error, profile:user.toObject()})
+      this.setState({loading: false, error, profile:user?user.toObject():null})
     }
   }
 
@@ -116,7 +116,9 @@ class ProfilePage extends Component {
   }
   renderProfile(){
     const {profile} = this.state;
-    if (isNullOrUndefined(profile)) return null;
+    if (isNullOrUndefined(profile)) {
+      return <Message error header='Not logged in.'></Message>;
+    }
     const panes = [
       { menuItem: 'Details', render: () => <Tab.Pane>{this.renderDetails()}</Tab.Pane> },
       { menuItem: 'Teams', render: () => <Tab.Pane>{this.renderTeam()}</Tab.Pane> },
