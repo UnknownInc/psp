@@ -24,6 +24,15 @@ const msalConfig = {
 // instantiate MSAL
 const myMSALObj = new global.Msal.UserAgentApplication(msalConfig);
 
+function authCallback(error, response) {
+  //handle redirect response
+  console.error(error);
+  console.log(response);
+}
+
+// (optional when using redirect methods) register redirect call back for Success or Error
+myMSALObj.handleRedirectCallback(authCallback);
+
 export default class Landing extends Component {
 
   // A bit of state to give the user feedback while their email address is being 
@@ -147,6 +156,7 @@ export default class Landing extends Component {
       scopes: ["user.read", "profile"],
       prompt: "select_account",
       authority:authority,
+      loginHint:"yourloginid@publicisgroupe.net"
     }
     
     let accessTokenRequest = {
