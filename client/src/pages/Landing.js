@@ -48,6 +48,10 @@ export default class Landing extends Component {
   }
 
   async componentDidMount() {
+    const token = window.localStorage.getItem('m360at');
+    if (token) {
+
+    }
     await this.loadProfile();
   }
 
@@ -151,7 +155,7 @@ export default class Landing extends Component {
     }
   }
 
-  psLogin=async ()=>{
+  showPSLogin = async () => {
     let loginRequest = {
       scopes: ["user.read", "profile"],
       prompt: "select_account",
@@ -163,14 +167,20 @@ export default class Landing extends Component {
         scopes: ["user.read",],
         authority:authority,
     }
+    const loginResponse = await myMSALObj.loginPopup(loginRequest);
+    
+    const accessTokenResponse = await myMSALObj.acquireTokenSilent(accessTokenRequest);
+      // get access token from response
+    const token = accessTokenResponse.accessToken;
+    window.localStorage.setItem('m360at', token);
 
-    try {
-      const loginResponse = await myMSALObj.loginPopup(loginRequest);
-      
-      const accessTokenResponse = await myMSALObj.acquireTokenSilent(accessTokenRequest);
-        // get access token from response
-      const token = accessTokenResponse.accessToken;
-      window.localStorage.setItem('m360at', token);
+    return token;
+  }
+
+  psLogin=async ()=>{
+    try{
+
+      var token  = await this.showPSLogin();
       
       this.setState({accessToken: token},
           ()=>this.onVerify())
@@ -220,12 +230,12 @@ export default class Landing extends Component {
     return (
     <Page loading={sendingEmail}>
       <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'80vh', flexDirection:'column'}}>
-        <button className="ui blue button" onClick={this.psLogin}>Publicis Login</button>
-        <div style={{minHeight:'32px'}}></div>
+        {/* <button className="ui blue button" onClick={this.psLogin}>Publicis Login</button>
+        <div style={{minHeight:'32px'}}></div> */}
 
         <Form
           onSubmit={this.onSubmit}>
-          {/* <Form.Group>
+          <Form.Group>
             <Form.Input
               placeholder='Your work email'
               name='email'
@@ -238,7 +248,7 @@ export default class Landing extends Component {
               disabled={!iagree }
               action={attemptEmail ? null : {color:'blue', content:'Register'}}
             />
-          </Form.Group> */}
+          </Form.Group> 
           <Form.Group>
             <Form.Checkbox
               name='iagree'
