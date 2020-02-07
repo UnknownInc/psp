@@ -53,6 +53,11 @@ export default class Confirm extends Component {
       })
   }
 
+  reregister=()=>{
+    window.localStorage.setItem('registerAttempt', null);
+    this.setState({verified:true});
+  } 
+
   render = ()=>{
     const { confirming=false, verified } = this.state
     
@@ -82,6 +87,9 @@ export default class Confirm extends Component {
               action={{color:'blue', content:'Confirm'}}
               size='huge'
             />
+          </Form.Group>
+          <Form.Group>
+            <label onClick={this.reregister}>Register with different email.</label>
           </Form.Group>
         </Form>
       </div>
