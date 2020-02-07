@@ -44,7 +44,8 @@ export default class Landing extends Component {
     code:'',
     iagree: false,
     sendingEmail: false,
-    attemptEmail: window.localStorage.getItem('registerAttempt')
+    attemptEmail: window.localStorage.getItem('registerAttempt'),
+    showPSLoginButton: window.localStorage.getItem('spslb'),
   }
 
   async componentDidMount() {
@@ -217,7 +218,7 @@ export default class Landing extends Component {
   }
 
   render = () => {
-    const { sendingEmail, email, iagree, attemptEmail, loadingMessage } = this.state
+    const { sendingEmail, email, iagree, attemptEmail, loadingMessage,showPSLoginButton } = this.state
 
     if (this.state.loading) {
         return <Spinner size='massive' message={loadingMessage} />
@@ -230,8 +231,8 @@ export default class Landing extends Component {
     return (
     <Page loading={sendingEmail}>
       <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'80vh', flexDirection:'column'}}>
-        {/* <button className="ui blue button" onClick={this.psLogin}>Publicis Login</button>
-        <div style={{minHeight:'32px'}}></div> */}
+        {showPSLoginButton?<><button className="ui blue button" onClick={this.psLogin}>Publicis Login</button>
+        <div style={{minHeight:'32px'}}></div></>:null}
 
         <Form
           onSubmit={this.onSubmit}>
