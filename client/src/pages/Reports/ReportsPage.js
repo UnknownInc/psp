@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import Page from '../../components/Page';
 import moment from 'moment';
 import VError from 'verror';
-import { Menu,Container, Form, Header, Segment, Icon, Button, Message, Popup, Grid, Card, Item, Statistic } from 'semantic-ui-react';
+import { Menu,Container, Form, Header, Segment, Icon,Label, Button, Message, Popup, Grid, Card, Item, Statistic } from 'semantic-ui-react';
 import { getProfile} from '../../config';
 
 import { Sparklines, SparklinesLine,SparklinesSpots,SparklinesReferenceLine } from 'react-sparklines';
@@ -11,6 +11,7 @@ import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import Team from '../../domain/Team';
 import OptionsDropdown from '../../components/OptionsDropdown';
 import Data from '../../domain/Data';
+import User from '../../domain/User';
 
 const intervalOptions =[
   {key: 'last_week', text:'Last week', value:'7'},
@@ -39,13 +40,25 @@ class ReportsPage extends Component {
     let userid;
     let teams =[];
     try {
-      console.log(this.props.location)
-      userid = this.state.userid;
+      const params = new URLSearchParams(this.props.location.search); 
+      const email = params.get('e');
+      if (email) {
+        try{
+          const u = await User.getByEmail(email);
+          userid = u._id;
+        } catch(e) {
+          console.error(e);
+          userid = this.state.userid;
+        }
+      } else {
+        userid = this.state.userid;
+      }
       if (!userid) {
         const {profile} = await getProfile()
         userid = profile._id;
       }
       teams=await Team.load({userid})
+      console.dir(teams);
     }catch (err) {
       console.error(err);
       error = {
@@ -74,49 +87,103 @@ class ReportsPage extends Component {
     return values;
   }
   handleFilterChange = async ()=>{
-    const {selectedInterval}=this.state;
+    const {selectedInterval, teamtypes=[], }=this.state;
     if (true){
-      this.setState({filtering:true, summary:{aggregates:{category:[],top:[], bottom:[]}}});
-      setTimeout(async ()=>{
+      this.setState({filtering:true, recent:[], summary:{aggregates:{category:[],top:[], bottom:[]}}});
+      setImmediate(async ()=>{
         const startDate=moment().subtract('d', selectedInterval.value);
         const endDate=moment()
-        const allData = await Data.getTeamQuestionsSummary({uid: this.state.userid ,startDate, endDate});
-        const data = allData.company;
+        const allData = await Data.getTeamQuestionsSummary({uid: this.state.userid ,startDate, endDate,
+          teamType:teamtypes.join(',')});
+        const questions = allData.questions;
 
         const summary={ aggregates:{category:[], top:[], bottom:[]}};
         const categoryAggregates=[
-          {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
-          {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-          {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
-          {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
+          // {category:'Engagement',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4},
+          // {category:'Culture',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+          // {category:'Manager',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0},
+          // {category:'Leaders',values:this.getRandomValues(selectedInterval.value), companyAvg:1+Math.random()*4.0}
         ]
         summary.aggregates.category=categoryAggregates;
-        summary.aggregates.top=[
-          {question:"Do your teammates know how to keep Sapient & Sapient's Clients intellectual property and data safe?", category:'Work Environment', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 3.6}},
-          {question:"Do you find your work to be a positive challenge?", category:'Engagement', date:new Date(2019,0,23), data:{companyAvg:4.0, average: 3.9}},
-          {question:"Does working at Sapient motivate you to exceed expectations at work?", category:'Culture', date:new Date(2019,2,1), data:{companyAvg:3.8, average: 3.6}},
-        ]
-        summary.aggregates.bottom=[
-          {question:"Are you planning on looking for a new job in the near future?", category:'Engagement', date:new Date(2019,1,9), data:{companyAvg:3.5, average: 2.8}},
-          {question:"How often do you get to decide the best way to get your work done?", category:'Manager', date:new Date(2019,0,23), data:{companyAvg:3.4, average: 2.0}},
-          {question:"When my leader delivers feedback, they first seek to understand.", category:'Leaders', date:new Date(2019,0,5), data:{companyAvg:3.7, average: 2.1}},
-        ]
-        this.setState({filtering: false, summary})
-      }, 1000)
+        summary.aggregates.top=[]; summary.aggregates.bottom=[];
+
+        const cats={};
+        for(let i=0;i<allData.scores.length;++i){
+          const itm=allData.scores[i];
+          if (!cats[itm.category]) {
+            cats[itm.category]={category: itm.category, values:[], companyAvg:0, companyValues:[]};
+            categoryAggregates.push(cats[itm.category]);
+          }
+          cats[itm.category].values.push(itm.average/20);
+          itm.qi=questions.filter(q=>q.qsid===itm.eid)[0];
+          cats[itm.category].companyValues.push(itm.qi.average/20);
+        }
+
+        let sortedQlist=[];
+        sortedQlist = allData.scores.sort((a,b)=>(b.average - a.average));
+        for(let i=0;i<Math.min(sortedQlist.length,3);i++) {
+          const itm=sortedQlist[i];
+          const qi=itm.qi;//questions.filter(q=>q.qsid===itm.eid)[0];
+          const q=qi.questionset.questions[0];
+          summary.aggregates.top.push({
+            question: q.question,
+            options:[...q.options,{value:'idwa'}],
+            category: q.category,
+            count: itm.count,
+            dist: [...itm.dist].reverse(),
+            date:qi.day,
+            data:{ average: itm.average/20, companyAvg: qi.average/20} 
+          })
+        }
+
+        for(let i=0;i<Math.min(sortedQlist.length,3);i++) {
+          const itm=sortedQlist[sortedQlist.length-i-1];
+          if (!itm) continue;
+          const qi=itm.qi;//questions.filter(q=>q.qsid===itm.eid)[0];
+          const q=qi.questionset.questions[0];
+          summary.aggregates.bottom.push({
+            question: q.question,
+            options:[...q.options,{value:'idwa'}],
+            category: q.category,
+            count: itm.count,
+            dist: [...itm.dist].reverse(),
+            date:qi.day,
+            data:{ average: itm.average/20, companyAvg: qi.average/20} 
+          })
+        }
+
+        sortedQlist = allData.scores.sort((a,b)=> moment(a.interval).unix() - moment(b.interval).unix()); 
+        const recent=[];
+        for(let i=sortedQlist.length-1;i>=0;i--) {
+          const itm = sortedQlist[i]; //sortedQlist.filter(itm=>itm.eid===qi.qsid)[0];
+          const qi=itm.qi;// questions[i];
+          const q=qi.questionset.questions[0];
+          recent.push({
+            question: q.question,
+            options:[...q.options,{value:'idwa'}],
+            category: q.category,
+            count: itm.count,
+            dist: [...itm.dist].reverse(),
+            date:qi.day,
+            data:{ average: itm.average/20, companyAvg: qi.average/20}
+          })
+        }
+        this.setState({filtering: false, summary, recent})
+      });
     }
   }
 
-  handleTeamSelection=(e,data)=>{
+  handleTeamSelection=(_e,data)=>{
     // const selectedTeams = this.state.teams.filter(t=> (data.value.indexOf(t.name)!==-1));
     // this.setState({selectedTeams})
     this.setState({selectedTeams: data.value});
   }
 
-  handleManagerSelection=(e,data)=>{
+  handleManagerSelection=(_e,data)=>{
     this.setState({selectedManagers: data.value});
   }
 
-  handleIntervalChange=(e,data)=>{
+  handleIntervalChange=(_e,data)=>{
     console.log(data);
     this.setState({selectedInterval: intervalOptions.find(i=>i.value===data.value)})
   }
@@ -151,7 +218,7 @@ class ReportsPage extends Component {
         <Form.Group inline>
           <Form.Field>
             <label>Team Type</label>
-            <OptionsDropdown opname='teamtype' placeholder='All' value={teamtypes} onChange={(e,{value})=>{
+            <OptionsDropdown opname='teamtype' placeholder='All' value={teamtypes} onChange={(_e,{value})=>{
               this.setState({teamtypes: value});
             }} selection multiple clearable />
           </Form.Field>
@@ -173,28 +240,37 @@ class ReportsPage extends Component {
     </Segment>
   }
 
+  handleItemClick = (itemId)=>{
+    this.setState({activeItem:itemId});
+  }
   renderSecondaryMenu(){
-    const {activeItem} = this.state;
+    const {activeItem, teams=[]} = this.state;
     return <Menu secondary pointing borderless>
-      <Menu.Item name='overview' active={activeItem === 'overview'} onClick={this.handleItemClick} />
+      <Menu.Item name='overview' active={activeItem === 'overview'} onClick={()=>this.handleItemClick('overview')} />
+      {teams.map((t)=>{
+        return <Menu.Item name={t.name} key={t._id} active={activeItem === t._id} onClick={()=>this.handleItemClick(t._id)} /> 
+      })}
     </Menu> 
   }
 
   getColor(avg,cavg){
-    let color='grey';
+    let color='';
     const diff=avg-cavg;
-    if (diff<=-25) { color='red'}
-    if (diff>=-10) {color='green'}
     if (diff>0) {color='blue'} 
+    else if (diff>=-10) {color='green'}
+    else if (diff>=-20) { color='grey'}
+    else if (diff>=-30) { color='yellow'}
+    else { color='red'}
     return color;
   }
-  renderChart(category, data, cavg) {
+  renderChart(category, data, cdata) {
     const avg=data.reduce((s,d)=>s+d,0)/data.length;
+    const cavg=cdata.reduce((s,d)=>s+d,0)/cdata.length;
     const score=Math.trunc(avg*20.0);
     const cscore=Math.trunc(cavg*20.0);
     const changePercent=Math.trunc( (data[data.length-1]-data[0])*20.0);
     let color=this.getColor(score,cscore);
-    return <Card>
+    return <Card key={category}>
       <Card.Content>
         <Button circular floated='right' color={color} basic style={{
           width:'48px',height: '48px',
@@ -222,23 +298,36 @@ class ReportsPage extends Component {
     </Card>
   }
 
-  renderMiniCard(item){
+  renderMiniCard(item, i, icons=true){
     if (!item) return null;
     const score=Math.trunc(item.data.average*20.0);
     const cscore=Math.trunc(item.data.companyAvg*20.0);
     let color=this.getColor(score,cscore);
-    return <Item>
+    const cmap=['blue','green','grey','yellow','red',''];
+    return <Item key={i}>
       <div style={{minWidth:'96px',height:'108px', color:'white', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center'}}
-        className={'ui inverted '+color+' menu'}>
+        className={`ui inverted ${color} menu`}>
         <Statistic size='tiny'>
-          <Statistic.Value>{score}%</Statistic.Value>
-          <Statistic.Label>company: {cscore}%</Statistic.Label>
+          <Statistic.Value><strong>{score}</strong>%</Statistic.Value>
+          <Statistic.Label><br/><small>company: {cscore}%</small></Statistic.Label>
         </Statistic>
       </div>
       <Item.Content style={{paddingLeft:'1em', backgroundColor:'white', maxHeight:'108px'}}>
-        <Item.Extra>{moment(item.date).format('dddd,MMMM Do')}</Item.Extra>
-        <Item.Header>{item.question}</Item.Header>
-        <Item.Description>{item.category}</Item.Description>
+        <Item.Extra>{moment(item.date).format('dddd,MMMM Do')}&nbsp;&nbsp;&nbsp;<strong>{item.category}</strong>({item.count})</Item.Extra>
+        <Item.Header><br/>{item.question}</Item.Header>
+        <Item.Description>
+            <Label.Group size='mini' circular={icons}>
+              {item.options.map((o,i)=>{
+                return icons?<Popup  key={i}
+                  trigger={<Label color={cmap[ Math.round(i*6.0/item.options.length)]}>{item.dist[i]}</Label>}
+                  content={o.value}
+                />:<Label color={cmap[ Math.round(i*6.0/item.options.length)]} basic key={i}>
+                  {o.value}
+                  <Label.Detail>({item.dist[i]})</Label.Detail>
+                </Label>
+              })}
+            </Label.Group>
+        </Item.Description>
       </Item.Content>
     </Item>
   }
@@ -265,10 +354,11 @@ class ReportsPage extends Component {
             <div style={{display:'flex', justifyContent:'space-between'}}>
               <Header as={'h3'} color='grey' >Category averages</Header>
               <div >
-                <Popup trigger={<Icon name='square full' color='red'/>} content={'Critically Below company average'} position='top center'/>
-                <Popup trigger={<Icon name='square full' color='grey'/>} content={'Below company average'} position='top center'/>
-                <Popup trigger={<Icon name='square full' color='green'/>} content={'Around company average'} position='top center'/>
-                <Popup trigger={<Icon name='square full' color='blue'/>} content={'Better than company average'} position='top center'/>
+                <Popup trigger={<Icon name='square full' color='red'/>} content={'Critically Below company average'} position='top right'/>
+                <Popup trigger={<Icon name='square full' color='yellow'/>} content={'Well Below company average'} position='top right'/>
+                <Popup trigger={<Icon name='square full' color='grey'/>} content={'Below company average'} position='top right'/>
+                <Popup trigger={<Icon name='square full' color='green'/>} content={'Around company average'} position='top right'/>
+                <Popup trigger={<Icon name='square full' color='blue'/>} content={'Better than company average'} position='top right'/>
               </div>
             </div>
             <Card.Group centered itemsPerRow={4} doubling>
@@ -276,7 +366,7 @@ class ReportsPage extends Component {
                   category.length===0?(
                     <h4><Icon name='frown outline'/> Not enough data to report. Change the filters or Check after few days.</h4>
                   ):(
-                    category.map(d=>this.renderChart(d.category,d.values, d.companyAvg))
+                    category.map(d=>this.renderChart(d.category,d.values, d.companyValues))
                   )
                 }
             </Card.Group>
@@ -285,12 +375,12 @@ class ReportsPage extends Component {
             <br/><br/><br/>
             <Grid columns={2} stackable>
               <Grid.Column>
-    <Header as={'h3'} color='grey'>Top questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the most favourable responses from the team.'}/></small></Header>
+                <Header as={'h3'} color='grey'>Top questions <small><Popup trigger={<Icon name='question circle outline'/>} content={'The questions that had the most favourable responses from the team.'}/></small></Header>
                 <Item.Group>
                   {
                     top.length===0?(
                       <h4><Icon name='frown outline'/> Not enough data to report.</h4>
-                    ):top.map(i=>this.renderMiniCard(i))
+                    ):top.map((item,i)=>this.renderMiniCard(item, i))
                   }
                 </Item.Group>
               </Grid.Column>
@@ -300,7 +390,7 @@ class ReportsPage extends Component {
                   {
                     bottom.length===0?(
                       <h4><Icon name='frown outline'/> Not enough data to report.</h4>
-                    ):bottom.map(i=>this.renderMiniCard(i))
+                    ):bottom.map((item,i)=>this.renderMiniCard(item, i))
                   }
                 </Item.Group>
               </Grid.Column>
@@ -310,7 +400,7 @@ class ReportsPage extends Component {
               {
                 recent.length===0?(
                       <h4><Icon name='frown outline'/> Not enough data to report.</h4>
-                    ):recent.map(i=>this.renderMiniCard(i))
+                    ):recent.map((item,i)=>this.renderMiniCard(item, i, false))
               }
             </Item.Group>
           </div>

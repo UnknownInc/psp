@@ -44,7 +44,7 @@ export default class Landing extends Component {
     code:'',
     iagree: false,
     sendingEmail: false,
-    attemptEmail: window.localStorage.getItem('registerAttempt'),
+    attemptEmail: window.localStorage.getItem('registerAttempt')??'',
     showPSLoginButton: window.localStorage.getItem('spslb'),
   }
 
@@ -136,14 +136,10 @@ export default class Landing extends Component {
       const data = await res.json() 
       
       if (res.status===200){
-        // Everything has come back successfully, time to update the state to 
-        // reenable the button and stop the <Spinner>. Also, show a toast with a 
-        // message from the server to give the user feedback and reset the form 
-        // so the user can start over if she chooses.
         const email = this.state.email;
         notify.show(data.message)
-        window.localStorage.setItem('registerAttempt', email);
         this.setState({attemptEmail: email})
+        window.localStorage.setItem('registerAttempt', email);
       } else if (res.status>=400) {
         notify.show(data.error);
       }
@@ -195,8 +191,8 @@ export default class Landing extends Component {
   }
 
   renderConfirmationBox = () => {
-    const { iagree, attemptEmail, code } = this.state
-    if (!attemptEmail) {
+    const { iagree, attemptEmail='', code } = this.state
+    if (attemptEmail==='') {
       return null;
     }
 
@@ -218,7 +214,7 @@ export default class Landing extends Component {
   }
 
   render = () => {
-    const { sendingEmail, email, iagree, attemptEmail, loadingMessage,showPSLoginButton } = this.state
+    const { sendingEmail, email='', iagree, attemptEmail='', loadingMessage,showPSLoginButton } = this.state
 
     if (this.state.loading) {
         return <Spinner size='massive' message={loadingMessage} />

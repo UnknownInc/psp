@@ -40,11 +40,14 @@ export default class Data {
     }
   } 
 
-  static async getTeamQuestionsSummary({uid, startDate, limit}) {
+  static async getTeamQuestionsSummary({uid, startDate, limit, teamType}) {
     try {
-      let url = `/q?v=1&u=${uid}`;
+      let url = `/q?u=${uid}`;
       if (startDate) {
         url+=`&startDate=${moment(startDate).format('YYYY-MM-DD')}`;
+      }
+      if (teamType) {
+        url+=`&teamType=${teamType}`;
       }
       if (limit) {
         url+=`&limit=${limit}`;

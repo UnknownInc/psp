@@ -58,18 +58,20 @@ export default class DashboardPage extends Component {
         cdata.data.push([dt.format('YYYY/MM/DD'), Math.round(r.average),N,...r.dist]);
         data0[r.questionset.questions[0].category]=cdata;
 
+        let rops=[...r.questionset.questions[0].options].reverse()
         questionHistory.push({
           1: r.dist[0],
           2: r.dist[1],
           3: r.dist[2],
           4: r.dist[3],
           5: r.dist[4],
+          6: r.dist[5],
           N: N,
           avg:avg,
           Label: `${dt.format('YYYY-MM-DD')}`,
           category: r.questionset.questions[0].category,
           text: r.questionset.questions[0].question,
-          options: r.questionset.questions[0].options.reverse(),
+          options: [{value:'IDWA'},...rops],
         });
       })
     } catch (err) {

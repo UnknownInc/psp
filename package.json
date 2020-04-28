@@ -11,7 +11,7 @@
     "build": "babel src -d lib",
     "babel-node": "babel-node",
     "test": "mocha --require @babel/register",
-    "dev": "cross-env NODE_PATH=. NODE_ENV=development nodemon --watch src --exec babel-node src/index.js"
+    "dev": "cross-env NODE_PATH=. NODE_ENV=development nodemon --watch './src/**/*' --exec babel-node src/index.js"
   },
   "author": "",
   "license": "MIT",
