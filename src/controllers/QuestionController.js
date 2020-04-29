@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable new-cap */
 import moment from 'moment';
-import { EDESTADDRREQ } from 'constants';
 const {Router} = require('express');
 const mongoose = require('mongoose');
 
@@ -277,23 +276,37 @@ export default class QuestionController {
     try {
       const allRes=await Response.find({}).populate('user');
       let count=allRes.length;
+      let pcount=0;
       allRes.forEach(async (r)=>{
-        const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
-        let rdate=moment(r.date);
-        if (rdate.dayOfYear()!=moment(qs.date).dayOfYear()) {
-          rdate=moment(qs.date);
-        }
-        this.logger.debug(rdate.toString()+' - '+rdate.toString());
-        await this._addQEvent(qs, r.response, r.user, rdate);
-        count--;
-        if (count==0) {
-          return res.sendStatus(200);
+        try {
+          const qs = await QuestionSet.findOne({_id: ObjectId(r.set)});
+          let rdate=moment(r.date);
+          if (rdate.dayOfYear()!=moment(qs.date).dayOfYear()) {
+            rdate=moment(qs.date);
+          }
+          pcount++;
+          if (pcount%100===0) {
+            this.logger.debug(`processing ...${pcount}`);
+          }
+          // this.logger.debug(rdate.toString()+' - '+rdate.toString());
+          await this._addQEvent(qs, r.response, r.user, rdate);
+          count--;
+          if (count%100===0) {
+            this.logger.debug(`processed ${count} responses`);
+          }
+          if (count==0) {
+            this.logger.debug('Finished replay');
+            // return res.sendStatus(200);
+          }
+        } catch (e) {
+          this.logger.debug(e);
         }
       });
     } catch (err) {
       this.logger.error(err);
       return res.sendStatus(500);
     }
+    return res.sendStatus(200);
   }
 
   /**
@@ -316,6 +329,9 @@ export default class QuestionController {
       default:
         resIdx=q.options.length;
         break;
+    }
+    if (resIdx>q.options.length) {
+      this.logger.error('response out of range:', response, q.options.length);
     }
     const responseValue=(1- (resIdx/q.options.length))*100;
 

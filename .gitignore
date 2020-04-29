@@ -64,6 +64,7 @@ BUILD_DATE
 BUILD_ID
 COMMIT_ID
 localDevSetup.sh
+localProdDbSetup.sh
 
 # next.js build output
 .next

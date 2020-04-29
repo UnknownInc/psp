@@ -78,17 +78,24 @@ export default class DataController {
   }) {
     console.time('team aggregate');
     let condition = (feild, groups)=>`('${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'${groupName}')) ) )`;
+    const groupNames=groupName.split(',');
     if (groupName=='any') {
       condition = (feild, groups)=>`( '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'reportees')) ) OR
         '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'mentees')) ) OR
         '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'projectTeam')) )
       )`;
+    } else if (groups.length>1) {
+      condition = (feild, groups)=>`('${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'${groupName[0]}')) ) `;
+      for (let i=1; i<groups.length; ++i) {
+        condition+=`OR '${feild}' = ANY( ARRAY(SELECT jsonb_array_elements_text(${groups}->'${groupNames[i]}')) ) `;
+      }
+      condition += ')';
     }
     const query = `
       SELECT 
         time_bucket('${interval}', time) AS interval,
         category, 
-        histogram(value, 20.0, 80.0, 3) as dist, 
+        histogram(value, 16.66, 83.33, 4) as dist, 
         avg(value) as average,
         count(e.source_id) as count,
         event_ref as eid
@@ -213,9 +220,11 @@ export default class DataController {
       // this.logger.debug(team.rows);
 
       if (user._id.toString()!==req.query.u) {
-        return res.status(403).json({
-          error: 'Not authorized',
-        });
+        if (!user.isInRole('admin')) {
+          return res.status(403).json({
+            error: 'Not authorized',
+          });
+        }
       }
 
       const eventType = req.params.eventType.toLowerCase();
@@ -225,31 +234,45 @@ export default class DataController {
         });
       }
 
-      const uid = req.query.u;
+
+      const query =`SELECT 
+          time::DATE as day, 
+          COUNT(*) as count, 
+          avg(value) as average,
+          histogram(value, 16.66, 83.33, 4) as dist, 
+          event_ref as qsid
+        FROM events 
+        WHERE event_type='${req.params.eventType}'
+        ${startDate?`AND time >='${startDate}'`:''}
+        ${endDate?`AND time <='${endDate}'`:''}
+        GROUP BY day, qsid
+        ORDER BY day desc`;
+
+      const results = await this.eventsdb.sh.query(query);
+
       const QuestionSet = this.database.QuestionSet;
-
-      const trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'reportees'});
-      let questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
-      trResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.eid);
+      const questions = await QuestionSet.find({_id: {'$in': results.rows.map((r)=>r.qsid)}});
+      results.rows.forEach((r)=>{
+        const match = questions.filter((q)=>q._id==r.qsid);
         r.questionset=match[0];
       });
 
-      const tpResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'projectteam'});
-      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
-      tpResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.eid);
-        r.questionset=match[0];
-      });
+      const uid = req.query.u;
 
-      const tmResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: 'mentees'});
-      questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
-      tmResults.rows.forEach((r)=>{
-        const match = questions.filter((q)=>q._id==r.eid);
-        r.questionset=match[0];
-      });
+      const teamType = (req.params.teamType?req.params.teamType:'any').toLowerCase();
+      let trResults={rows: []};
 
-      const output = {reportees: trResults.rows, projectteam: tpResults.rows, mentees: tmResults.rows};
+      trResults = await this._getScores(uid, {eventType, startDate, endDate, groupName: teamType});
+      // questions = await QuestionSet.find({_id: {'$in': trResults.rows.map((r)=>r.eid)}});
+      // trResults.rows.forEach((r)=>{
+      //   const match = questions.filter((q)=>q._id==r.eid);
+      //   r.questionset=match[0];
+      // });
+
+      const output = {
+        questions: results.rows,
+        scores: trResults.rows,
+      };
       return res.json(output);
     } catch (err) {
       this.logger.error(err);
@@ -312,7 +335,7 @@ export default class DataController {
           time::DATE as day, 
           COUNT(*) as count, 
           avg(value) as average,
-          histogram(value, 20.0, 80.0, 3) as dist,
+          histogram(value, 16.66, 83.33, 4) as dist, 
           event_ref as qsid
         FROM events 
         WHERE event_type='${req.params.eventType}'

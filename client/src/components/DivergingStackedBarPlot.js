@@ -30,7 +30,7 @@ export default class DivergingStackedBarPlot extends Component {
       .rangeRound([0, width]);
 
     var color = d3.scaleOrdinal()
-      .range(["#fe414d", "#ffe63b", "#b4b4b4", "#00e6c3", "#079fff"]);
+      .range(["#fff", "#fe414d", "#ffe63b", "#b4b4b4", "#00e6c3", "#079fff"]);
 
     var xAxis = d3.axisTop()
       .scale(x)
@@ -46,22 +46,24 @@ export default class DivergingStackedBarPlot extends Component {
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      color.domain(["E", "D", "C", "B", "A"]);
+      color.domain(["IDWA", "E", "D", "C", "B", "A"]);
 
       const data=props.data;
 
       data.forEach(function(d) {
         // calc percentages
-        d["E"] = +d[1]*100/d.N;
-        d["D"] = +d[2]*100/d.N;
-        d["C"] = +d[3]*100/d.N;
-        d["B"] = +d[4]*100/d.N;
-        d["A"] = +d[5]*100/d.N;
-        var x0 = -1*(d["C"]/2+d["D"]+d["E"]);
-        var idx = 0;
-        d.boxes = color.domain().map(function(name) { 
-          const op=d.options[idx];
-          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx += 1], avg: d.avg, category: d.category}; 
+        d["IDWA"] = +d[1]*100/d.N;
+        d["E"] = +d[2]*100/d.N;
+        d["D"] = +d[3]*100/d.N;
+        d["C"] = +d[4]*100/d.N;
+        d["B"] = +d[5]*100/d.N;
+        d["A"] = +d[6]*100/d.N;
+        var x0 = -1*(d["C"]/2+d["D"]+d["E"]+d["IDWA"]);
+        d.boxes = color.domain().map(function(name, idx) { 
+          const opi=Math.trunc(idx*d.options.length/6.0);
+          const op=d.options[opi];
+          console.log(idx+'-'+op.value+', '+opi+' ,'+d.options.length);
+          return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx+1], avg: d.avg, category: d.category}; 
         });
       });
 
@@ -70,7 +72,7 @@ export default class DivergingStackedBarPlot extends Component {
         });
 
       var max_val = d3.max(data, function(d) {
-          return d.boxes["4"].x1;
+          return d.boxes["5"].x1;
         });
 
       x.domain([min_val, max_val]).nice();
@@ -131,16 +133,19 @@ export default class DivergingStackedBarPlot extends Component {
         .style("fill", "#fff")
         .style("stroke-width","4")
         .style("stroke",function(d){
-          if (d.avg>=0.80) {
+          var inc=0.166666;
+          if (d.avg>=(1-inc)) {
             return "#079FFF";
-          } else if (d.avg>=0.60) {
+          } else if (d.avg>=(1-2.0*inc)) {
             return "#00e6c3";
-          } else if (d.avg>=0.40) {
+          } else if (d.avg>=(1-3.0*inc)) {
             return "#b4b4b4";
-          } else if (d.avg>=0.20) {
+          } else if (d.avg>=(1-4.0*inc)) {
             return "#FFE63B";
-          } 
-          return "#fe414d";
+          } else if (d.avg>=(1-5.0*inc)) {
+            return "#fe414d";
+          }
+          return "#fff";
         })
       .append('title')
         .text(function(d){return d.N});

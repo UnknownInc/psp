@@ -105,4 +105,5 @@ const config =Object.assign({
 
 }, envConfig);
 
+// console.dir(config);
 module.exports = config;
