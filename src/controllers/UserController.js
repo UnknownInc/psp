@@ -3,7 +3,7 @@ const {Router} = require('express');
 import {getEmailParts} from '../common/helpers';
 import moment from 'moment';
 import request from 'request';
-const uuidv4 = require('uuid/v4');
+import {v4 as uuidv4} from 'uuid';
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;

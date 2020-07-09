@@ -27,19 +27,21 @@ export default class EventsDatabase {
    * connect to the database
    */
   async connect() {
-    this.logger.trace('connect');
-    this.logger.debug(`connecting to ${process.env['EVENTS_SERVER']}`);
+    this.logger.trace(`${__filename} connect`);
+    const host = process.env['EVENTS_SERVER'];
+    const port = process.env['EVENTS_SERVER_PORT'];
     try {
+      this.logger.debug(`POSTGRES connecting to ${host}:${port}`);
       this.sh = shiphold({
-        host: process.env['EVENTS_SERVER'],
-        port: process.env['EVENTS_SERVER_PORT'],
+        host,
+        port,
         user: process.env['EVENTS_USER'],
         password: process.env['EVENTS_PASSWORD'],
         database: 'psb',
       });
 
       await this.sh.connect();
-      this.logger.info(`POSTGRESQL Connected to ${process.env['EVENTS_SERVER']}`);
+      this.logger.info(`POSTGRES Connected to ${host}`);
       this._status='Ready';
 
       this.Events = this.sh.service({
@@ -58,3 +60,35 @@ export default class EventsDatabase {
     }
   }
 }
+/*
+
+    const {shiphold} = require('ship-hold');
+    const host = process.env['EVENTS_SERVER'];
+    const port = process.env['EVENTS_SERVER_PORT'];
+    const user = process.env['EVENTS_USER'];
+    const password = process.env['EVENTS_PASSWORD'];
+    const database = 'psb';
+
+    const { Pool, Client } = require('pg')
+    const connectionString = `postgresql://${user}:${password}@${host}:${port}/${database}`;
+    const pool = new Pool({
+      connectionString: connectionString,
+    });
+
+    pool.query('SELECT NOW()', (err, res) => {
+      console.log(err, res)
+      pool.end()
+    });
+
+    const client = new Client({
+      connectionString: connectionString,
+    });
+
+    client.connect();
+
+    client.query('SELECT NOW()', (err, res) => {
+      console.log(err, res)
+      client.end()
+    });
+
+*/

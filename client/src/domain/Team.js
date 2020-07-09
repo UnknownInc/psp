@@ -1,7 +1,7 @@
 import VError from 'verror';
 import APIResource from './APIResource';
 import User from './User';
-import uuidv1 from 'uuid/v1';
+import {v1 as uuidv1} from 'uuid'
 
 
 const teamService = new APIResource({resourceName:'team'})

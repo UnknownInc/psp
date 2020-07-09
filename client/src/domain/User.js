@@ -1,6 +1,6 @@
 import VError from 'verror';
 import APIResource from './APIResource';
-import uuidv1 from 'uuid/v1'
+import {v1 as uuidv1} from 'uuid'
 import moment from 'moment';
 
 const userService = new APIResource({resourceName:'user'})

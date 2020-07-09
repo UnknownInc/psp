@@ -82,6 +82,7 @@ export default class Database {
         user: process.env['DB_USERNAME'],
         pass: process.env['DB_PASSWORD'],
         useNewUrlParser: true,
+        useUnifiedTopology: true,
       });
       this.createModels();
     } catch (err) {

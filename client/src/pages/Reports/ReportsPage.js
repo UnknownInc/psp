@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import Page from '../../components/Page';
 import moment from 'moment';
 import VError from 'verror';
-import { Menu,Container, Form, Header, Segment, Icon,Label, Button, Message, Popup, Grid, Card, Item, Statistic } from 'semantic-ui-react';
+import { Checkbox,Menu,Container, Form, Header, Segment, Icon,Label, Button, Message, Popup, Grid, Card, Item, Statistic } from 'semantic-ui-react';
 import { getProfile} from '../../config';
 
 import { Sparklines, SparklinesLine,SparklinesSpots,SparklinesReferenceLine } from 'react-sparklines';
@@ -30,7 +30,8 @@ class ReportsPage extends Component {
       userid: this.props.userid,
       activeItem: 'overview',
       recent:[],
-      selectedInterval:intervalOptions[1]
+      selectedInterval:intervalOptions[1],
+      onlyDirects:true
     }
   }
 
@@ -127,7 +128,7 @@ class ReportsPage extends Component {
           const q=qi.questionset.questions[0];
           summary.aggregates.top.push({
             question: q.question,
-            options:[...q.options,{value:'idwa'}],
+            options:[...q.options,{value:'IDWA'}],
             category: q.category,
             count: itm.count,
             dist: [...itm.dist].reverse(),
@@ -143,7 +144,7 @@ class ReportsPage extends Component {
           const q=qi.questionset.questions[0];
           summary.aggregates.bottom.push({
             question: q.question,
-            options:[...q.options,{value:'idwa'}],
+            options:[...q.options,{value:'IDWA'}],
             category: q.category,
             count: itm.count,
             dist: [...itm.dist].reverse(),
@@ -160,7 +161,7 @@ class ReportsPage extends Component {
           const q=qi.questionset.questions[0];
           recent.push({
             question: q.question,
-            options:[...q.options,{value:'idwa'}],
+            options:[...q.options,{value:'IDWA'}],
             category: q.category,
             count: itm.count,
             dist: [...itm.dist].reverse(),
@@ -208,14 +209,19 @@ class ReportsPage extends Component {
       t.children.forEach(u=>{
         if (addedEmails.indexOf(u.email)) {
           addedEmails.push(u.email);
-          managers.push({key: u.email, text: u.name, value: u});
+          let name=(u.name||'').trim();
+          if (name===''){
+            let p=u.email.split('@');
+            name=p[0].replace('.',' ');
+          }
+          managers.push({key: u.email, text: name, value: u});
         }
       });
     })
 
     return <Segment basic loading={filtering}>
       <Form>
-        <Form.Group inline>
+        <Form.Group widths='equal'>
           <Form.Field>
             <label>Team Type</label>
             <OptionsDropdown opname='teamtype' placeholder='All' value={teamtypes} onChange={(_e,{value})=>{
@@ -229,12 +235,16 @@ class ReportsPage extends Component {
            
           <Form.Select options={intervalOptions} label='Duration' value={selectedInterval.value} onChange={this.handleIntervalChange} />
           
-          <Button basic color='blue' animated='fade' onClick={this.handleFilterChange}>
-            <Button.Content hidden>Filter</Button.Content>
-            <Button.Content visible>
-              <Icon name='filter' />
-            </Button.Content>
-          </Button>
+        </Form.Group>
+        <Form.Group>
+          <Form.Field width={4}>
+            <label></label>
+            <Checkbox toggle label='Only Directs' checked={this.state.onlyDirects} onChange={(_e,{checked})=>this.setState({onlyDirects:checked})}/>
+          </Form.Field>
+          <Form.Field width={12}>
+            <Button basic color='blue' onClick={this.handleFilterChange} fluid
+              content='Filter' icon='filter'/>
+          </Form.Field>
         </Form.Group>
       </Form>
     </Segment>
@@ -247,9 +257,10 @@ class ReportsPage extends Component {
     const {activeItem, teams=[]} = this.state;
     return <Menu secondary pointing borderless>
       <Menu.Item name='overview' active={activeItem === 'overview'} onClick={()=>this.handleItemClick('overview')} />
-      {teams.map((t)=>{
+
+      {/* teams.map((t)=>{
         return <Menu.Item name={t.name} key={t._id} active={activeItem === t._id} onClick={()=>this.handleItemClick(t._id)} /> 
-      })}
+      })*/}
     </Menu> 
   }
 
