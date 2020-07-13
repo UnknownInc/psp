@@ -21,7 +21,7 @@ export default class Application {
    */
   async start() {
     this.logger.info('Buildinfo: ', this.config.buildInfo);
-
+    this.logger.info('ENV', process.env);
     if (this.cache) {
       await this.cache.connect();
     }
