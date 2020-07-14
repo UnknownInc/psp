@@ -445,7 +445,7 @@ export default class UserController {
         to: payload.address,
         token: token.token,
         companyUrl: companyUrl,
-        appName: process.env['K_SERVICE'],
+        appName: process.env['APP_NAME'],
       };
       const emailContent = require('../emails/templates/verify').confirm(data);
       emailContent.from=process.env.MAIL_FROM;
