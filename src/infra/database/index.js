@@ -71,7 +71,10 @@ export default class Database {
    */
   async connect() {
     this.logger.trace('connect');
-    const uri = `mongodb://${process.env['DB_SERVER']}:${process.env['DB_PORT']}/pulsedb`;
+    let uri = `mongodb://${process.env['DB_SERVER']}:${process.env['DB_PORT']}/pulsedb`;
+    if (process.env['DB_SERVER'].endsWith('prod')) {
+      uri+='?replicaSet=psb0'
+    }
     this.db = mongoose.createConnection();
 
     this._setupDBEvents();
