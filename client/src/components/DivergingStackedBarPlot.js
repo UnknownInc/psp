@@ -62,7 +62,6 @@ export default class DivergingStackedBarPlot extends Component {
         d.boxes = color.domain().map(function(name, idx) { 
           const opi=Math.trunc(idx*d.options.length/6.0);
           const op=d.options[opi];
-          console.log(idx+'-'+op.value+', '+opi+' ,'+d.options.length);
           return {name:name, op:(op?op.value:name), x0: x0, x1: x0 += +d[name], N: +d.N, n: +d[idx+1], avg: d.avg, category: d.category}; 
         });
       });

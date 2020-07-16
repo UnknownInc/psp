@@ -53,8 +53,8 @@ module.exports = ({config, logger, cache, database, eventsdb,
   router.get('/_status', (_req, res)=>{
     res.json({
       buildInfo: {...config.buildInfo},
-      service: process.env['K_SERVICE'],
-      revision: process.env['K_REVISION'],
+      service: process.env['APP_NAME'],
+      revision: process.env['REVISION'],
       cache: {...cache.status},
       db: {...database.status},
       edb: {...eventsdb.status},

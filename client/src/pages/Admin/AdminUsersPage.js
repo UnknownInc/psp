@@ -7,7 +7,7 @@ import { isNullOrUndefined } from 'util';
 import { getProfile, getHeaders } from '../../config'
 import moment from 'moment';
 import csv from "fast-csv";
-import uuidv1 from 'uuid/v1';
+import {v1 as uuidv1} from 'uuid'
 import VError from 'verror';
 import Page from '../../components/Page';
 import ResponsiveButton from '../../components/ResponsiveButton'

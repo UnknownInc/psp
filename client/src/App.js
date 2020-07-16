@@ -1,9 +1,8 @@
 import React, {Component} from 'react';
 import { BrowserRouter, Route, Redirect, Switch, Link } from 'react-router-dom'
 import Notifications from 'react-notify-toast'
-import { DndProvider } from 'react-dnd'
-import HTML5Backend from 'react-dnd-html5-backend'
-
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import Spinner from './components/Spinner'
 import Confirm from './pages/Confirm'

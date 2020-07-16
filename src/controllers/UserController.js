@@ -3,7 +3,7 @@ const {Router} = require('express');
 import {getEmailParts} from '../common/helpers';
 import moment from 'moment';
 import request from 'request';
-const uuidv4 = require('uuid/v4');
+import {v4 as uuidv4} from 'uuid';
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -445,7 +445,7 @@ export default class UserController {
         to: payload.address,
         token: token.token,
         companyUrl: companyUrl,
-        appName: process.env['K_SERVICE'],
+        appName: process.env['APP_NAME'],
       };
       const emailContent = require('../emails/templates/verify').confirm(data);
       emailContent.from=process.env.MAIL_FROM;

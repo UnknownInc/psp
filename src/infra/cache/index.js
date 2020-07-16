@@ -29,28 +29,28 @@ export default class Cache {
     this.get = this.cache.get.bind(this.cache);
     this.set = this.cache.set.bind(this.cache);
 
-    this.cache.on('connect', (err) => {
+    this.cache.on('connect', (_err) => {
       this.logger.info('REDIS: connected.');
       this.status.connectionStatus = 'connected';
       this.status.serverInfo = Object.assign({}, this.cache.server_info);
     });
 
     this.cache.on('error', (err) => {
-      this.logger.error('REDIS: Error ', err);
+      // this.logger.error('REDIS: Error ', err);
       this.status.lastError=err;
     });
 
-    this.cache.on('ready', (err) => {
+    this.cache.on('ready', (_err) => {
       this.logger.info('REDIS: ready.');
       this.status.connectionStatus = 'ready';
     });
 
-    this.cache.on('end', (err) => {
+    this.cache.on('end', (_err) => {
       this.logger.warn('REDIS: disconnected');
       this.status.connectionStatus = 'disconnected';
     });
 
-    this.cache.on('reconnecting', (err) => {
+    this.cache.on('reconnecting', (_err) => {
       this.logger.warn('REDIS: reconnecting');
       this.status.connectionStatus = 'reconnecting';
     });

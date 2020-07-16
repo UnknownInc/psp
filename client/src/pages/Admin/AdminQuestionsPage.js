@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import uuidv1 from 'uuid/v1';
+import {v1 as uuidv1} from 'uuid';
 import csv from "fast-csv";
 
 import { notify } from 'react-notify-toast'
