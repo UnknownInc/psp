@@ -286,20 +286,20 @@ export default class QuestionController {
           }
           pcount++;
           if (pcount%100===0) {
-            this.logger.debug(`processing ...${pcount}`);
+            this.logger.info(`processing ...${pcount}`);
           }
           // this.logger.debug(rdate.toString()+' - '+rdate.toString());
           await this._addQEvent(qs, r.response, r.user, rdate);
           count--;
           if (count%100===0) {
-            this.logger.debug(`processed ${count} responses`);
+            this.logger.info(`processed ${count} responses`);
           }
           if (count==0) {
-            this.logger.debug('Finished replay');
+            this.logger.info('Finished replay');
             // return res.sendStatus(200);
           }
         } catch (e) {
-          this.logger.debug(e);
+          this.logger.error(e);
         }
       });
     } catch (err) {
@@ -367,7 +367,7 @@ export default class QuestionController {
     parents = await Node.find({children: {'$in': user._id}, type: 'Community'});
     groups.community = parents.map((n)=>`${n.user}`);
 
-    await this.eventsdb.sh.query(`
+    await this.eventsdb.pool.query(`
       DELETE FROM events WHERE 
       source_id = '${user._id.toString()}' AND 
       event_ref = '${qs._id.toString()}' AND 
@@ -383,7 +383,7 @@ export default class QuestionController {
       ON CONFLICT DO NOTHING;
     `;
     // this.logger.info(iquery);
-    await this.eventsdb.sh.query(iquery);
+    await this.eventsdb.pool.query(iquery);
   }
 
   /**
