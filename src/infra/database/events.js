@@ -23,6 +23,60 @@ export default class EventsDatabase {
     };
   }
 
+  async setup() {
+    this.logger.trace(`EDB setup`);
+    try {
+      const setupresults=await this.sh.query(`
+
+    CREATE TABLE IF NOT EXISTS questions(
+        question_id VARCHAR PRIMARY KEY,
+        date DATE NOT NULL,
+        data jsonb
+    );
+    
+    CREATE TABLE IF NOT EXISTS users (
+        user_id VARCHAR PRIMARY KEY,
+        email VARCHAR(100) NOT NULL
+    );
+    
+    CREATE TABLE IF NOT EXISTS nodes (
+      node_id VARCHAR PRIMARY KEY,
+      user_id VARCHAR,
+      children VARCHAR[],
+      type VARCHAR,
+      name VARCHAR
+    );
+    
+    CREATE TABLE IF NOT EXISTS events(
+        source_id VARCHAR,
+        groups jsonb,
+        event_type VARCHAR,
+        event_ref VARCHAR  NOT NULL,
+        time TIMESTAMP NOT NULL,
+        event_data jsonb,
+        value REAL,
+        category VARCHAR,
+        PRIMARY KEY (source_id, event_ref, time)
+    );
+    
+    -- This creates a hypertable that is partitioned by time
+    --   using the values in the 'time' column.
+    
+    SELECT create_hypertable('events', 'time', chunk_time_interval => interval '1 day', if_not_exists => TRUE);
+
+
+    CREATE INDEX idx_e_cat ON events(category); 
+    CREATE INDEX idx_e_et ON events(event_type);
+    CREATE INDEX idx_e_grp_gin ON events USING GIN (groups); 
+    CREATE INDEX idx_e_ed_gin ON events USING GIN (event_data);
+      `);
+      this.logger.info('EDB setup: ', setupresults);
+    } catch(err) {
+      this.logger.error(err);
+      this._status='Setup Failure';
+    }
+  }
+
   /**
    * connect to the database
    */
@@ -43,6 +97,8 @@ export default class EventsDatabase {
       await this.sh.connect();
       this.logger.info(`POSTGRES Connected to ${host}`);
       this._status='Ready';
+
+      await this.setup();
 
       this.Events = this.sh.service({
         name: 'Events',
