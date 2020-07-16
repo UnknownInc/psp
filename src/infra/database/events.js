@@ -27,7 +27,7 @@ export default class EventsDatabase {
   async setup() {
     this.logger.trace(`EDB setup`);
     try {
-      const setupresults=await this.sh.query(`
+      const setupresults=await this.pool.query(`
 
     CREATE TABLE IF NOT EXISTS questions(
         question_id VARCHAR PRIMARY KEY,
