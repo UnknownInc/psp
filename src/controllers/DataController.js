@@ -59,7 +59,7 @@ export default class DataController {
       ) SELECT t.day, array_agg(t.user) as users  from team t group by t.day;
     `;
     this.logger.trace(query);
-    const result = await this.eventsdb.sh.query(query);
+    const result = await this.eventsdb.pool.query(query);
     console.timeEnd('get children on date');
     return result;
   }
@@ -132,7 +132,7 @@ export default class DataController {
     this.logger.trace('\n');
     this.logger.trace(query);
     this.logger.trace('\n');
-    const result = await this.eventsdb.sh.query(query);
+    const result = await this.eventsdb.pool.query(query);
     console.timeEnd('team aggregate');
     return result;
   }
@@ -248,7 +248,7 @@ export default class DataController {
         GROUP BY day, qsid
         ORDER BY day desc`;
 
-      const results = await this.eventsdb.sh.query(query);
+      const results = await this.eventsdb.pool.query(query);
 
       const QuestionSet = this.database.QuestionSet;
       const questions = await QuestionSet.find({_id: {'$in': results.rows.map((r)=>r.qsid)}});
@@ -348,7 +348,7 @@ export default class DataController {
         query += `LIMIT ${req.query.limit}`;
       }
 
-      const results = await this.eventsdb.sh.query(query);
+      const results = await this.eventsdb.pool.query(query);
 
       const QuestionSet = this.database.QuestionSet;
       const questions = await QuestionSet.find({_id: {'$in': results.rows.map((r)=>r.qsid)}});

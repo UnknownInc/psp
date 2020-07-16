@@ -1,4 +1,5 @@
 const {shiphold} = require('ship-hold');
+const { Pool } = require('pg');
 
 /**
  * EventsDatabase infra for events db
@@ -84,8 +85,16 @@ export default class EventsDatabase {
     this.logger.trace(`${__filename} connect`);
     const host = process.env['EVENTS_SERVER'];
     const port = process.env['EVENTS_SERVER_PORT'];
+    const user = process.env['EVENTS_USER'];
+    const password = process.env['EVENTS_PASSWORD'];
+    const database = 'psb';
+
     try {
       this.logger.debug(`POSTGRES connecting to ${host}:${port}`);
+      this.pool = new Pool({
+        connectionString: `postgresql://${user}:${password}@${host}:${port}/${database}`,
+      });
+
       this.sh = shiphold({
         host,
         port,
