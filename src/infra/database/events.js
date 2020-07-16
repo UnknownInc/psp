@@ -65,10 +65,10 @@ export default class EventsDatabase {
     SELECT create_hypertable('events', 'time', chunk_time_interval => interval '1 day', if_not_exists => TRUE);
 
 
-    CREATE INDEX idx_e_cat ON events(category); 
-    CREATE INDEX idx_e_et ON events(event_type);
-    CREATE INDEX idx_e_grp_gin ON events USING GIN (groups); 
-    CREATE INDEX idx_e_ed_gin ON events USING GIN (event_data);
+    CREATE INDEX IF NOT EXISTS idx_e_cat ON events(category); 
+    CREATE INDEX IF NOT EXISTS idx_e_et ON events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_e_grp_gin ON events USING GIN (groups); 
+    CREATE INDEX IF NOT EXISTS idx_e_ed_gin ON events USING GIN (event_data);
       `);
       this.logger.info('EDB setup: ', setupresults);
     } catch(err) {
