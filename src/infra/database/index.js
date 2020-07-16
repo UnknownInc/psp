@@ -82,6 +82,8 @@ export default class Database {
         user: process.env['DB_USERNAME'],
         pass: process.env['DB_PASSWORD'],
         useNewUrlParser: true,
+        useMongoClient: true,
+        autoIndex: false, // Don't build indexes
       });
       this.createModels();
     } catch (err) {
