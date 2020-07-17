@@ -93,7 +93,6 @@ substitutions:
 options:
   substitution_option: 'ALLOW_LOOSE'
 images:
-- gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest
 - gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA
 
 #reference https://cloud.google.com/cloud-build/docs/build-config
