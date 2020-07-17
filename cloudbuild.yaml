@@ -30,27 +30,16 @@ steps:
   volumes:
   - name: 'ssh'
     path: /root/.ssh
-# pull the prev image for caching https://cloud.google.com/cloud-build/docs/speeding-up-builds
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest || exit 0
-  dir: "psp"
 # build the container image
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', 
-  '--build-arg',
-  'BUILDID=${BUILD_ID}',
-  '--build-arg',
-  'COMMITID=${SHORT_SHA}',
-  '--cache-from', 'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest',
-  '-t', 
-  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest',
-  '-t', 
-  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',  
-  '.']
+- name: gcr.io/kaniko-project/executor
+  args: [
+    '--destination=gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',
+    '--cache-repo=gcr.io/$PROJECT_ID/${_APP_NAME}',
+    '--cache=true',
+    '--cache-ttl=6h',
+    '--build-arg=BUILDID=${BUILD_ID}',
+    '--build-arg=COMMITID=${SHORT_SHA}',
+  ]
   dir: "psp"
 # This step clones the psp-env repository & checkout dev
 - name: 'gcr.io/cloud-builders/gcloud'
