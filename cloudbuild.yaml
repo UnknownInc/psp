@@ -31,16 +31,29 @@ steps:
   - name: 'ssh'
     path: /root/.ssh
 # build the container image
-- name: gcr.io/kaniko-project/executor
-  args: [
-    '--destination=gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',
-    '--cache-repo=gcr.io/$PROJECT_ID/${_APP_NAME}',
-    '--cache=true',
-    '--cache-ttl=6h',
-    '--build-arg=BUILDID=${BUILD_ID}',
-    '--build-arg=COMMITID=${SHORT_SHA}',
-  ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', 
+  '--build-arg',
+  'BUILDID=${BUILD_ID}',
+  '--build-arg',
+  'COMMITID=${SHORT_SHA}',
+  '--cache-from', 'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest',
+  '-t', 
+  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest',
+  '-t', 
+  'gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',  
+  '.']
   dir: "psp"
+# - name: gcr.io/kaniko-project/executor
+#   args: [
+#     '--destination=gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA',
+#     '--cache-repo=gcr.io/$PROJECT_ID/${_APP_NAME}',
+#     '--cache=true',
+#     '--cache-ttl=6h',
+#     '--build-arg=BUILDID=${BUILD_ID}',
+#     '--build-arg=COMMITID=${SHORT_SHA}',
+#   ]
+#   dir: "psp"
 # This step clones the psp-env repository & checkout dev
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: bash
@@ -90,10 +103,12 @@ steps:
     path: /root/.ssh
 substitutions:
   _APP_NAME: 'psb'
+timeout: '1200s'
 options:
   substitution_option: 'ALLOW_LOOSE'
 images:
 - gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:$SHORT_SHA
+- gcr.io/$PROJECT_ID/${_APP_NAME}-${BRANCH_NAME}:latest
 
 #reference https://cloud.google.com/cloud-build/docs/build-config
 # steps:
