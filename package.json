@@ -36,7 +36,7 @@
     "mongoose": "^5.9.24",
     "mongoose-mpath": "^2.1.0",
     "morgan": "^1.10.0",
-    "nodemailer": "^6.4.10",
+    "nodemailer": "^6.4.16",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
     "pg": "^8.3.0",
